@@ -1,0 +1,73 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-status-error);
+}
+
+/* Модель не выбрана — перечёркнутый список возможностей соврал бы: неизвестно,
+   какую модель подставит провайдер. */
+.pending {
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-muted);
+}
+
+/* Матрица возможностей: строка на возможность, у выключенной — объяснение,
+   что произойдёт вместо неё. Пустая строка без объяснения бесполезна. */
+.capabilities {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  padding: var(--space-3);
+  margin: 0;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.capability {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-secondary);
+}
+
+.capabilityGlyph {
+  flex: none;
+  margin-top: 0.1em;
+  color: var(--color-status-success);
+}
+
+.off .capabilityGlyph {
+  color: var(--color-text-muted);
+}
+
+.capabilityBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.off .capabilityLabel {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--color-border-strong);
+}
+
+.capabilityNote {
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+}

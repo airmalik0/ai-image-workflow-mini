@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+.turbo/
+coverage/
+*.log
+.env
+.env.local
+.env.*.local
+.DS_Store
+data/
+playwright-report/
+test-results/
+
+# временные данные локальных прогонов
+.demo-data/
+apps/.demo-data/

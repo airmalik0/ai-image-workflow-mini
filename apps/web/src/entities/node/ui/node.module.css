@@ -1,0 +1,338 @@
+/* --- Карточка ноды -------------------------------------------------------
+   Скругление и «свет сверху» те же, что у Panel: нода — такая же поверхность,
+   просто лежит на канвасе. */
+.card {
+  width: 248px;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--edge-highlight), var(--shadow-2);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.card:hover {
+  border-color: var(--color-border-strong);
+}
+
+/* Панель генерации шире остальных карточек: в ней живут два ряда чипов,
+   и в 248 пикселях они рассыпаются по одному чипу в строку. */
+.wide {
+  width: 304px;
+}
+
+/* Выделение — действие пользователя, поэтому единственное место для акцента. */
+.selected,
+.selected:hover {
+  border-color: var(--color-accent);
+  box-shadow:
+    var(--edge-highlight),
+    var(--shadow-2),
+    0 0 0 1px var(--color-accent);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-2);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.kind {
+  font-size: var(--text-ui);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--color-text);
+}
+
+.id {
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-wide);
+  line-height: var(--leading-tight);
+  color: var(--color-text-muted);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+/* --- Порты ---------------------------------------------------------------
+   Две колонки: входы слева, выходы справа. Хэндл вынесен за границу карточки
+   отрицательным полем — так связь приходит точно в подпись порта. */
+.ports {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.portColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.portOut {
+  align-items: flex-end;
+}
+
+.portRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+}
+
+.handleIn {
+  margin-left: calc(-1 * var(--space-3) - 5px);
+  margin-right: var(--space-0-5);
+}
+
+.handleOut {
+  margin-right: calc(-1 * var(--space-3) - 5px);
+  margin-left: var(--space-0-5);
+}
+
+/* Звёздочка у обязательного входа: без него граф не пройдёт валидацию. */
+.required {
+  color: var(--color-text-muted);
+}
+
+.portsEmpty {
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+/* --- Содержимое тела ----------------------------------------------------- */
+
+.text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: none;
+  font-size: var(--text-ui);
+  line-height: var(--leading-ui);
+  color: var(--color-text-secondary);
+}
+
+.placeholder {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.counter {
+  align-self: flex-end;
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+}
+
+/* Рамка под изображение: пропорция 16:9, чтобы нода не прыгала после запуска. */
+.frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  padding: var(--space-2);
+  text-align: center;
+  background: var(--color-canvas);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-micro);
+  line-height: var(--leading-ui);
+  color: var(--color-text-muted);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1-5);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-micro);
+  line-height: var(--leading-ui);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.tagKey {
+  color: var(--color-text-muted);
+}
+
+.tagEmpty {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Превью загруженного файла: те же пропорции, что у рамки-заглушки, чтобы
+   нода не меняла высоту в момент загрузки. */
+.preview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+/* Превью-кнопка: картинка сама и есть кнопка полноразмерного просмотра.
+   Лупа проявляется по наведению — в покое она мешала бы смотреть результат. */
+.previewButton {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  border-radius: var(--radius-sm);
+}
+
+.previewButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.previewZoom {
+  position: absolute;
+  right: var(--space-1-5);
+  bottom: var(--space-1-5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-xs);
+  background: rgb(0 0 0 / 55%);
+  color: var(--color-text);
+  font-size: var(--text-caption);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.previewButton:hover .previewZoom,
+.previewButton:focus-visible .previewZoom {
+  opacity: 1;
+}
+
+/* --- Состояния запуска на карточке --------------------------------------- */
+
+/* Пропущенная нода не выполнялась и уже не будет: приглушение говорит это
+   раньше, чем пользователь дочитает пилюлю. Это не ошибка и выглядеть
+   ошибкой не должно. */
+.dimmed {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+/* Работающая нода — единственное живое состояние на холсте: её видно, даже
+   когда карточка не выделена и не в фокусе взгляда. */
+.card[data-status='running'] {
+  border-color: color-mix(in oklab, var(--color-status-running) 60%, transparent);
+  box-shadow:
+    var(--edge-highlight),
+    var(--shadow-2),
+    0 0 0 1px color-mix(in oklab, var(--color-status-running) 45%, transparent);
+  animation: node-pulse 1.6s var(--ease-standard) infinite;
+}
+
+.card[data-status='error'] {
+  border-color: color-mix(in oklab, var(--color-status-error) 55%, transparent);
+}
+
+.card[data-status='success'] {
+  border-color: color-mix(in oklab, var(--color-status-success) 45%, transparent);
+}
+
+@keyframes node-pulse {
+  50% {
+    box-shadow:
+      var(--edge-highlight),
+      var(--shadow-2),
+      0 0 0 4px color-mix(in oklab, var(--color-status-running) 16%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card[data-status='running'] {
+    animation: none;
+  }
+}
+
+/* Отказ ноды: код, текст провайдера и повтор — прямо в теле карточки.
+   Шапка занята пилюлей статуса, и втискивать туда ещё и кнопку нельзя. */
+.failure {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1-5);
+  padding: var(--space-2);
+  border: 1px solid color-mix(in oklab, var(--color-status-error) 40%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--color-status-error) 8%, transparent);
+}
+
+.failureHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.failureTitle {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  color: var(--color-status-error);
+}
+
+.failureCode {
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);
+}
+
+.failureText {
+  font-size: var(--text-micro);
+  line-height: var(--leading-ui);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.failureHint {
+  font-size: var(--text-micro);
+  line-height: var(--leading-ui);
+  color: var(--color-text-muted);
+}

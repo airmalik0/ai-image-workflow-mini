@@ -1,0 +1,151 @@
+/**
+ * Тема React Flow. Библиотека рисует канвас своими классами и переменными `--xy-*`,
+ * поэтому здесь ровно одно действие: перевести её на наши токены. Собственная
+ * вёрстка нод и панелей живёт в CSS-модулях компонентов, а не тут.
+ */
+.react-flow {
+  --xy-background-color: var(--color-canvas);
+  /* Имя переменной именно такое: точечный паттерн читает общий
+     `--xy-background-pattern-color`, а не свой `-dots-` вариант. */
+  --xy-background-pattern-color: #2b2b35;
+
+  --xy-edge-stroke: #575767;
+  --xy-edge-stroke-selected: var(--color-accent);
+  --xy-edge-stroke-width: 1.5;
+  --xy-connectionline-stroke: var(--color-accent);
+  --xy-connectionline-stroke-width: 1.5;
+
+  --xy-selection-background-color: var(--color-accent-veil);
+  --xy-selection-border: 1px dashed var(--color-accent);
+
+  --xy-controls-button-background-color: var(--color-surface);
+  --xy-controls-button-background-color-hover: var(--color-hover);
+  --xy-controls-button-color: var(--color-text-secondary);
+  --xy-controls-button-color-hover: var(--color-text);
+  --xy-controls-button-border-color: var(--color-border-subtle);
+  --xy-controls-box-shadow: var(--shadow-2);
+
+  --xy-minimap-background-color: var(--color-surface);
+  --xy-minimap-mask-background-color: rgb(13 13 15 / 68%);
+  --xy-minimap-mask-stroke-color: var(--color-border);
+  --xy-minimap-mask-stroke-width: 2;
+  --xy-minimap-node-background-color: #3a3a45;
+  --xy-minimap-node-stroke-color: transparent;
+
+  --xy-attribution-background-color: transparent;
+}
+
+/*
+ * Слой рёбер: React Flow держит его в `svg` нулевого размера и рисует за границы
+ * через `overflow: visible`. Наш сброс `svg { max-width: 100% }` превращает эту
+ * ширину в жёсткий предел 0 — по спецификации SVG нулевая ширина отключает
+ * отрисовку целиком, и связи исчезают, оставаясь в DOM. Снимаем предел.
+ */
+.react-flow svg {
+  max-width: none;
+}
+
+/* --- Порты ---------------------------------------------------------------
+   Хэндл встаёт в поток строки порта, а не висит по центру грани: подпись и
+   точка соединения должны быть на одной линии. Тип порта кодируется формой —
+   квадрат `text`, круг `image`, — потому что все шесть цветов уже заняты статусами. */
+.react-flow__handle {
+  position: relative;
+  inset: auto;
+  transform: none;
+  width: 10px;
+  height: 10px;
+  flex: none;
+  background: var(--color-canvas);
+  border: 1.5px solid var(--color-text-muted);
+  border-radius: 2px;
+  pointer-events: all;
+  cursor: crosshair;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.react-flow__handle[data-port-type='image'] {
+  border-radius: var(--radius-pill);
+}
+
+/* Невидимый запас вокруг точки: попасть в 10 пикселей мышью тяжело. */
+.react-flow__handle::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+.react-flow__handle:hover,
+.react-flow__handle.connectingfrom {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+/* Подсветка допустимых целей во время протяжки — подсказка «сюда можно». */
+.react-flow__handle.connectingto {
+  border-color: var(--color-status-error);
+}
+
+.react-flow__handle.valid {
+  border-color: var(--color-status-success);
+  background: var(--color-status-success);
+}
+
+/* --- Контролы, миникарта, подпись ---------------------------------------- */
+
+.react-flow__controls {
+  /* Место снизу под подпись библиотеки, чтобы они не липли друг к другу. */
+  margin-bottom: var(--space-6);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  width: 28px;
+  height: 28px;
+}
+
+.react-flow__minimap {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+.react-flow__attribution {
+  padding-left: var(--space-4);
+  font-size: var(--text-micro);
+}
+
+.react-flow__attribution a {
+  color: var(--color-text-muted);
+  opacity: 0.55;
+}
+
+.react-flow__attribution a:hover {
+  opacity: 1;
+}
+
+/* Ноды рисуют себя сами, но с клавиатуры по ним ходят — фокус должен быть виден.
+   Радиус совпадает с карточкой: обводка ложится по её форме. */
+.react-flow__node:focus {
+  outline: none;
+}
+
+.react-flow__node:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+  border-radius: var(--radius-lg);
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke-width: 2;
+}
+
+/* Выделенная нода узнаётся и на миникарте — тем же акцентом. */
+.react-flow__minimap-node.selected {
+  fill: var(--color-accent);
+}

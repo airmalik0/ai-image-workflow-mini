@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "src",
+    "outDir": "dist",
+    // сборка резолвит workspace-пакеты штатно, через их exports: иначе их исходники
+    // попали бы во входные файлы программы и tsc заругался бы на rootDir
+    "paths": {}
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts"]
+}

@@ -1,0 +1,108 @@
+/* Каркас редактора: шапка, ряд объявлений и три колонки — палитра, холст,
+   инспектор. Средняя колонка `minmax(0, 1fr)`, иначе канвас растянет сетку
+   по своему содержимому и боковые панели уедут за край экрана.
+   Средний ряд `auto`: без объявлений он не занимает ни пикселя. */
+.shell {
+  display: grid;
+  grid-template-rows: 52px auto minmax(0, 1fr);
+  height: 100%;
+  background: var(--color-canvas);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-inline: var(--space-4);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-ui);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-snug);
+}
+
+.brandMark {
+  font-size: 20px;
+  color: var(--color-text-secondary);
+}
+
+.brandDivider {
+  width: 1px;
+  height: 18px;
+  background: var(--color-border);
+}
+
+.breadcrumb {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.link {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--color-text-secondary);
+}
+
+.body {
+  /* Ряд задан явно: пока объявлять нечего, `DemoLimitNotice` не рисует ни одного
+     элемента, и автоматическая раскладка положила бы рабочую область во второй
+     ряд — тот самый `auto`, который сжимается по содержимому. Редактор при этом
+     переставал занимать окно целиком, а холст терял половину высоты. */
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 340px;
+  min-height: 0;
+}
+
+/* Адаптив рассчитан от 1280px: на этой ширине боковые колонки ужимаются, а
+   средняя остаётся рабочей. Ниже 1280 редактор графа не притворяется удобным. */
+@media (max-width: 1439px) {
+  .body {
+    grid-template-columns: 208px minmax(0, 1fr) 296px;
+  }
+
+  .rail {
+    padding: var(--space-3);
+  }
+}
+
+/* Средняя колонка: холст занимает всё, что остаётся от полки таймлайна.
+   Полка ограничена по высоте — она не должна съедать холст, а её тело скроллится. */
+.center {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.timelineSlot {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 46vh;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  min-height: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+}

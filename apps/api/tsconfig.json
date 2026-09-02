@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    // типы проверяются по исходникам workspace-пакетов, а не по их dist:
+    // иначе `pnpm typecheck` на чистом клоне падает до первой сборки
+    "paths": {
+      "@workflow/contracts": ["../../packages/contracts/src/index.ts"],
+      "@workflow/core": ["../../packages/core/src/index.ts"],
+      "@workflow/core/testing": ["../../packages/core/src/testing/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

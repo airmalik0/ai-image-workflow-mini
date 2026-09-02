@@ -1,0 +1,56 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  height: 26px;
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-raised);
+  color: var(--color-text-secondary);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+/* Выбранное — это решение пользователя, поэтому здесь работает акцент.
+   Заливка остаётся приглушённой: в ряду из десяти чипов сплошной розовый
+   перебивает всё вокруг, а рамка и текст читаются не хуже. */
+.selected {
+  border-color: var(--color-accent);
+  background: var(--color-accent-veil);
+  color: var(--color-accent-text);
+}
+
+.selected:hover:not(:disabled) {
+  border-color: var(--color-accent-hover);
+  color: var(--color-accent-hover);
+}
+
+.chip:disabled {
+  cursor: not-allowed;
+  color: var(--color-text-muted);
+  border-color: var(--color-border-subtle);
+  background: transparent;
+}
+
+.icon {
+  font-size: 1.1em;
+}
+
+.mark {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: currentcolor;
+}

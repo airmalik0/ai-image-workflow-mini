@@ -1,0 +1,453 @@
+/* Таймлайн — выдвижная полка под холстом. Ширина колонки подписей вынесена в
+   переменную: её же использует слой окон параллелизма, лежащий поверх строк. */
+.timeline {
+  --label-width: 152px;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+}
+
+/* --- Шапка ---------------------------------------------------------------- */
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+}
+
+.toggle:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.chevron {
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentcolor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.runId {
+  font-family: var(--font-numeric);
+  color: var(--color-text-muted);
+}
+
+.runStatus {
+  padding: 1px var(--space-2);
+  border: 1px solid color-mix(in oklab, var(--tone) 35%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--tone) 12%, transparent);
+  color: var(--tone);
+  letter-spacing: var(--tracking-wide);
+}
+
+.runQueued {
+  --tone: var(--color-status-queued);
+}
+
+.runRunning {
+  --tone: var(--color-status-running);
+}
+
+.runCompleted {
+  --tone: var(--color-status-success);
+}
+
+.runFailed {
+  --tone: var(--color-status-error);
+}
+
+.runCancelled {
+  --tone: var(--color-status-skipped);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-family: var(--font-numeric);
+}
+
+.stat b {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
+/* --- Тело ----------------------------------------------------------------- */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) var(--space-3);
+  overflow: hidden auto;
+  animation: unfold var(--duration-base) var(--ease-standard);
+}
+
+@keyframes unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.verdict {
+  max-width: none;
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-secondary);
+}
+
+.verdict b {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
+.verdictNames {
+  color: var(--color-status-running);
+}
+
+.loading {
+  padding: var(--space-4) 0;
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+/* --- Диаграмма ------------------------------------------------------------ */
+
+.chart {
+  position: relative;
+  /* Подписи полос выносятся за край полосы, но не за край диаграммы. */
+  overflow-x: clip;
+}
+
+/* Слой под полосами: линии сетки и окна одновременной работы. Он выровнен по
+   треку, поэтому начинается там же, где заканчивается колонка подписей. */
+.overlay {
+  position: absolute;
+  top: 0;
+  bottom: 22px;
+  left: var(--label-width);
+  right: 0;
+  pointer-events: none;
+}
+
+.gridline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-border-subtle);
+}
+
+/* Окно, в котором работали минимум два job'а. Ради этой полосы весь виджет:
+   она показывает, что ветки шли не по очереди, а вместе. */
+.band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 2px;
+  border-left: 1px dashed color-mix(in oklab, var(--color-status-running) 55%, transparent);
+  border-right: 1px dashed color-mix(in oklab, var(--color-status-running) 55%, transparent);
+  background: color-mix(in oklab, var(--color-status-running) 9%, transparent);
+}
+
+.bandLabel {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 var(--space-1-5);
+  border-radius: 0 0 var(--radius-xs) var(--radius-xs);
+  background: color-mix(in oklab, var(--color-status-running) 26%, var(--color-surface));
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-status-running);
+  white-space: nowrap;
+}
+
+.rows {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 18px 0 var(--space-2);
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 2px var(--space-1);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.row:hover {
+  background: var(--color-hover);
+}
+
+/* Выделение синхронно с холстом: акцент здесь уместен — это результат
+   действия пользователя, а не состояние системы. */
+.rowSelected {
+  background: var(--color-accent-veil);
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: none;
+  width: calc(var(--label-width) - var(--space-2) - var(--space-1));
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowSelected .name {
+  color: var(--color-text);
+}
+
+.nodeId {
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track {
+  position: relative;
+  flex: 1;
+  height: 22px;
+  min-width: 0;
+}
+
+.bar {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  min-width: 4px;
+  display: flex;
+  align-items: center;
+  padding-inline: var(--space-1-5);
+  border-radius: var(--radius-xs);
+  border: 1px solid color-mix(in oklab, var(--tone) 60%, transparent);
+  background: color-mix(in oklab, var(--tone) 24%, transparent);
+  animation: grow var(--duration-base) var(--ease-standard);
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(0.7);
+    transform-origin: left;
+    opacity: 0;
+  }
+}
+
+.barLabel {
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  line-height: 1;
+  color: var(--tone);
+  white-space: nowrap;
+}
+
+/* Подпись не должна ломать узкую полосу: у короткой она выносится наружу. */
+.barLabelInside {
+  margin-left: auto;
+}
+
+.barLabelRight {
+  position: absolute;
+  left: calc(100% + var(--space-1-5));
+}
+
+.barLabelLeft {
+  position: absolute;
+  right: calc(100% + var(--space-1-5));
+}
+
+.attempt {
+  margin-left: var(--space-1);
+  color: var(--color-status-error);
+}
+
+/* Ещё выполняется: правая граница не конец, а «сейчас» — рисуем это движением. */
+.open {
+  border-right-style: dashed;
+  background: repeating-linear-gradient(
+    115deg,
+    color-mix(in oklab, var(--tone) 30%, transparent) 0 8px,
+    color-mix(in oklab, var(--tone) 14%, transparent) 8px 16px
+  );
+  background-size: 200% 100%;
+  animation:
+    grow var(--duration-base) var(--ease-standard),
+    flow 900ms linear infinite;
+}
+
+@keyframes flow {
+  to {
+    background-position: -32px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .open {
+    animation: none;
+  }
+}
+
+.pending {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-wide);
+  color: var(--tone);
+  opacity: 0.75;
+}
+
+.idle {
+  --tone: var(--color-status-idle);
+}
+
+.queued {
+  --tone: var(--color-status-queued);
+}
+
+.running {
+  --tone: var(--color-status-running);
+}
+
+.success {
+  --tone: var(--color-status-success);
+}
+
+.error {
+  --tone: var(--color-status-error);
+}
+
+.skipped {
+  --tone: var(--color-status-skipped);
+}
+
+.skipped.bar {
+  border-style: dashed;
+  background: transparent;
+}
+
+/* --- Ось ------------------------------------------------------------------ */
+
+.axis {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.axisPad {
+  flex: none;
+  width: var(--label-width);
+}
+
+.axisTrack {
+  position: relative;
+  flex: 1;
+  height: 100%;
+}
+
+.tick {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  padding-inline: var(--space-1);
+  background: var(--color-surface);
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.tickStart {
+  transform: none;
+  padding-left: 0;
+}
+
+.tickEnd {
+  right: 0;
+  left: auto;
+  transform: none;
+  color: var(--color-text-secondary);
+}
+
+/* --- Ошибки и пустое состояние -------------------------------------------- */
+
+.failures {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) 0 var(--space-5);
+}
+
+.emptyTitle {
+  font-size: var(--text-ui);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.emptyText {
+  max-width: 78ch;
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-muted);
+}

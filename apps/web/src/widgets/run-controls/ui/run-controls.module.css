@@ -1,0 +1,131 @@
+/* Пульт запуска стоит в шапке, поэтому разбор проблем показывается выпадающей
+   панелью: в строке высотой 52px список причин с кодами не живёт. */
+.controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: var(--space-1);
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.stateText {
+  letter-spacing: var(--tracking-wide);
+}
+
+.mark {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-status-idle);
+}
+
+.queued {
+  background: var(--color-status-queued);
+}
+
+/* Пульсация — единственный элемент шапки, который движется: пока она есть,
+   на сервере что-то происходит. */
+.running {
+  background: var(--color-status-running);
+  animation: blink 1.4s var(--ease-standard) infinite;
+}
+
+.completed {
+  background: var(--color-status-success);
+}
+
+.failed {
+  background: var(--color-status-error);
+}
+
+.cancelled {
+  background: var(--color-status-skipped);
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .running {
+    animation: none;
+  }
+}
+
+.progress {
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+}
+
+/* Счётчик упавших нод: свой класс, а не .failed — тот красит метку статуса
+   запуска заливкой, и текст счётчика превращался бы в красный прямоугольник. */
+.failedCount {
+  color: var(--color-status-error);
+}
+
+.toggle {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--text-caption);
+  color: var(--color-accent-text);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 460px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+}
+
+.issues {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  margin: 0;
+  padding: 0 var(--space-2);
+  list-style: none;
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-secondary);
+}
+
+.issue {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  justify-content: space-between;
+}
+
+.issueCode {
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}

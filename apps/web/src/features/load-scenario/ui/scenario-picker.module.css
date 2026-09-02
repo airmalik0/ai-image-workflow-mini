@@ -1,0 +1,94 @@
+/* --- Карточки на пустом холсте -------------------------------------------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  width: min(720px, 100%);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  text-align: left;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--edge-highlight), var(--shadow-1);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.card:hover {
+  border-color: var(--color-border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--edge-highlight), var(--shadow-2);
+}
+
+.card:active {
+  transform: translateY(0);
+}
+
+.cardName {
+  font-size: var(--text-ui);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.cardSummary {
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-muted);
+}
+
+/* --- Схема сценария ------------------------------------------------------- */
+
+.shape {
+  width: 100%;
+  height: auto;
+}
+
+.shapeNode {
+  fill: var(--color-raised);
+  stroke: var(--color-border);
+  stroke-width: 1.5;
+}
+
+.card:hover .shapeNode {
+  stroke: var(--color-accent);
+}
+
+.shapeEdge {
+  fill: none;
+  stroke: var(--color-border-strong);
+  stroke-width: 2;
+}
+
+.card:hover .shapeEdge {
+  stroke: var(--color-accent);
+}
+
+.shapeLabel {
+  fill: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: var(--weight-medium);
+}
+
+/* --- Компактный ряд в шапке ------------------------------------------------ */
+
+.compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.compactLabel {
+  margin-right: var(--space-1);
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}

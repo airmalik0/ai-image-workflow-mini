@@ -1,0 +1,84 @@
+/* Один цвет на тон задаётся через --tone; остальное выводится из него color-mix,
+   как в статус-пилюле: новый тон — одна строка, а не три токена. */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid color-mix(in oklab, var(--tone) 35%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--tone) 10%, var(--color-surface));
+}
+
+.error {
+  --tone: var(--color-status-error);
+}
+
+.warning {
+  --tone: var(--color-status-skipped);
+}
+
+.info {
+  --tone: var(--color-status-queued);
+}
+
+.mark {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-top: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--tone);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 1;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: var(--text-ui);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+.code {
+  padding: 1px var(--space-1-5);
+  border: 1px solid color-mix(in oklab, var(--tone) 30%, transparent);
+  border-radius: var(--radius-xs);
+  background: color-mix(in oklab, var(--tone) 12%, transparent);
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-wide);
+  color: var(--tone);
+}
+
+.text {
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.hint {
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+}

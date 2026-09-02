@@ -1,0 +1,45 @@
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1-5);
+}
+
+.empty {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Внутри карточки ноды чипы мельче, а подпись группы — микрокеглем: без неё
+   два ряда чипов сливаются в один список без смысла. */
+.compact {
+  gap: var(--space-1);
+}
+
+.labelCompact {
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+}
+
+.compact .chips {
+  gap: var(--space-1);
+}
+
+.compact .chip {
+  height: 22px;
+  padding-inline: var(--space-2);
+  font-size: var(--text-micro);
+}

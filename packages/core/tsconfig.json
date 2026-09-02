@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    // проверка типов идёт по исходникам контрактов, а не по dist:
+    // иначе `pnpm typecheck` на чистом клоне падает до первой сборки
+    "paths": {
+      "@workflow/contracts": ["../contracts/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

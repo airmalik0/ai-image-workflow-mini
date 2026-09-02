@@ -1,0 +1,132 @@
+# Сборка и тесты. Ключей провайдеров здесь нет и не требуется: приложение обязано
+# полностью работать на заглушке, поэтому CI гоняет ровно ту конфигурацию,
+# которую получит проверяющий на чистом клоне.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  checks:
+    name: Линт, типы, формат, сборка
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm format
+      - run: pnpm build
+
+  tests:
+    name: Тесты против живых Postgres, Redis и MinIO
+    needs: checks
+    runs-on: ubuntu-latest
+
+    # Порты нестандартные — те же, что в `.env.example`: тесты ищут инфраструктуру
+    # по ним по умолчанию, и CI не должен требовать отдельной настройки окружения.
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: workflow_test
+        ports: ['55432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d workflow_test"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+
+      redis:
+        image: redis:8-alpine
+        ports: ['56379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # MinIO поднимается руками, а не через `services`: тому контейнеру нужна
+      # команда `server /data`, а сервисы GitHub Actions команду задавать не умеют.
+      - name: Поднять MinIO
+        run: |
+          docker run -d --name aiwf-test-minio -p 55900:9000 \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:latest server /data
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:55900/minio/health/live >/dev/null; then
+              echo "MinIO готов"; exit 0
+            fi
+            sleep 1
+          done
+          echo "MinIO не поднялся"; docker logs aiwf-test-minio; exit 1
+
+      - name: Прогнать тесты
+        run: pnpm test --reporter=default --reporter=json --outputFile.json=vitest-report.json
+
+      # Интеграционные наборы снимаются с прогона сами, когда инфраструктура
+      # недоступна. В CI это означало бы зелёную сборку, не проверившую ни слой
+      # данных, ни очередь, ни хранилище, — поэтому пропуски запрещены явно.
+      - name: Убедиться, что ничего не пропущено
+        run: node scripts/ci/no-skipped-tests.mjs vitest-report.json
+
+  e2e:
+    name: E2E против собранного стенда
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Поставить браузер
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Стенд поднимает сам прогон (`globalSetup` в playwright.config.ts):
+      # `docker compose up --build` с заглушкой вместо провайдера.
+      - name: Прогнать e2e
+        run: pnpm e2e
+
+      - name: Логи стенда, если что-то упало
+        if: failure()
+        run: docker compose logs --tail 200
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

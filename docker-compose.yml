@@ -1,0 +1,182 @@
+# Весь стенд одной командой: `docker compose up` → http://localhost:3000
+#
+# Заполненный `.env` не нужен. Без ключей провайдера приложение поднимается на `fake`
+# и полностью работоспособно: граф исполняется, картинки генерируются заглушкой.
+# Если `.env` есть, docker compose подставит его значения в переменные ниже —
+# адреса базы, Redis и хранилища при этом остаются внутренними, их из `.env` не переопределить.
+
+name: ai-image-workflow-mini
+
+# Общее окружение API и воркера. Один и тот же `loadConfig` разбирает его в обоих
+# процессах, поэтому и список переменных обязан быть общим — иначе воркер соберёт
+# другое хранилище или другого провайдера, чем API, и разъедутся они молча.
+x-app-environment: &app-environment
+  NODE_ENV: production
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+  DATABASE_URL: postgresql://postgres:postgres@postgres:5432/workflow
+  REDIS_URL: redis://redis:6379
+
+  # Хранилище API и воркера обязано быть общим: картинку пишет воркер, а отдаёт
+  # её `GET /api/files/:id` у API. Здесь это один именованный том на оба сервиса;
+  # при STORAGE_DRIVER=s3 общим становится бакет, и том просто не используется.
+  STORAGE_DRIVER: ${STORAGE_DRIVER:-fs}
+  DATA_DIR: /app/data/files
+  FILES_PUBLIC_BASE_URL: ${FILES_PUBLIC_BASE_URL:-}
+
+  IMAGE_PROVIDER: ${IMAGE_PROVIDER:-auto}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  GEMINI_MODEL: ${GEMINI_MODEL:-}
+  GEMINI_IMAGE_SIZE: ${GEMINI_IMAGE_SIZE:-}
+  OPENAI_MODEL: ${OPENAI_MODEL:-}
+
+  # Ноды, на которых обязана падать заглушка, — id через запятую. Нужно, чтобы
+  # воспроизвести сценарий «нода упала → Retry» без порчи боевого ключа.
+  # `editImage-1` падает всегда, `editImage-1:1` — только на первой попытке
+  # в каждом запуске, и тогда повтор доводит ноду до успеха.
+  # Действует только на провайдер fake.
+  FAKE_FAIL_NODES: ${FAKE_FAIL_NODES:-}
+
+  # Предохранитель публичного стенда: сколько успешных обращений к боевому
+  # провайдеру разрешено в сутки. По исчерпании включается fake — и это
+  # объявляется в /api/health и плашкой в интерфейсе. Ошибка провайдера
+  # заглушкой не подменяется никогда, ни при каком значении.
+  DEMO_DAILY_LIMIT: ${DEMO_DAILY_LIMIT:-0}
+
+  # потолок оркестратора (сколько job'ов вообще уходит в исполнение) и потолок
+  # одного процесса-воркера (сколько он тянет параллельно) — разные вещи
+  MAX_CONCURRENT_JOBS: ${MAX_CONCURRENT_JOBS:-4}
+  WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+  MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-15728640}
+  CORS_ORIGIN: '${CORS_ORIGIN:-*}'
+
+  S3_BUCKET: ${S3_BUCKET:-}
+  S3_REGION: ${S3_REGION:-}
+  S3_ENDPOINT: ${S3_ENDPOINT:-}
+  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+  S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+  S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
+  S3_KEY_PREFIX: ${S3_KEY_PREFIX:-}
+  S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-}
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: workflow
+    volumes:
+      # с 18-й версии официальный образ держит данные в /var/lib/postgresql/<major>/docker
+      # и объявляет томом сам /var/lib/postgresql — привычный /var/lib/postgresql/data
+      # тут ничего не сохраняет, база молча теряется при пересоздании контейнера
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d workflow']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    # appendonly не включаем сознательно: в Redis лежат очередь, флаги отмены и
+    # кольцевой буфер событий — состояние живущих запусков, а не архив
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      target: server
+    image: ai-image-workflow-mini/server
+    command: ['node', 'apps/api/dist/server.js']
+    environment: *app-environment
+    # Состояние оркестратора (готовность нод, семафор конкурентности, подписки SSE)
+    # живёт в памяти процесса. Второй экземпляр считал бы граф по своей копии
+    # состояния и выдал бы лишние job'ы мимо семафора, поэтому API — строго один.
+    # Масштабируется воркер: `docker compose up --scale worker=3`; он самодостаточен
+    # и про граф не знает ничего.
+    scale: 1
+    ports:
+      # прямой доступ к API мимо nginx: удобно для curl, OpenAPI и отладки
+      - '${API_PORT:-3001}:3000'
+    volumes:
+      - files-data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # health отвечает 200 и на больном стенде, поэтому проверяем именно поле
+      # status: 200 сам по себе тут ничего не доказывает
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>r.json()).then(b=>process.exit(b.status==='ok'?0:1),()=>process.exit(1))",
+        ]
+      # редкий опрос в установившемся режиме и частый на старте: health пишется
+      # в лог каждым запросом, и проверка раз в три секунды забивает `compose logs`
+      interval: 15s
+      start_interval: 1s
+      timeout: 5s
+      retries: 5
+      # миграции и сид идут до listen: первый ответ появляется не мгновенно
+      start_period: 60s
+    # SIGTERM и время закрыть соединения: обработчик сигнала есть в обоих процессах
+    stop_grace_period: 20s
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      target: server
+    image: ai-image-workflow-mini/server
+    command: ['node', 'apps/worker/dist/index.js']
+    environment: *app-environment
+    volumes:
+      # тот же том, что у API: иначе записанная воркером картинка не отдастся
+      - files-data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+      # ждём здорового API не из-за очереди (она переживёт что угодно), а из-за
+      # миграций и сида: пресеты воркер читает из базы, которую наполняет API
+      api:
+        condition: service_healthy
+    # воркер дожидается текущей генерации, прежде чем закрыться: оборванный запрос
+    # к провайдеру — это списанные деньги и job, который придётся повторять
+    stop_grace_period: 20s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      target: web
+    image: ai-image-workflow-mini/web
+    ports:
+      - '${WEB_PORT:-3000}:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '-', 'http://127.0.0.1/']
+      interval: 30s
+      start_interval: 1s
+      start_period: 15s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  files-data:

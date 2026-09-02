@@ -1,0 +1,24 @@
+.group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+}
+
+/* Тот же язык форм, что и у хэндлов на канвасе: квадрат — text, круг — image. */
+.shape {
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--color-text-muted);
+  border-radius: 1px;
+}
+
+.image {
+  border-radius: var(--radius-pill);
+}
+
+.divider {
+  width: 9px;
+  height: 1px;
+  background: var(--color-border-strong);
+}

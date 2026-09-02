@@ -1,0 +1,302 @@
+/* Контейнер запросов: строка состояния прячет подсказки по ширине КОЛОНКИ,
+   а не окна — при трёх колонках это совсем разные величины. */
+.canvas {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--color-canvas);
+  container-type: inline-size;
+}
+
+.flow {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* --- Пустое состояние ----------------------------------------------------- */
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  text-align: center;
+  pointer-events: none;
+  z-index: var(--z-panel);
+}
+
+.emptyTitle {
+  font-size: var(--text-lead);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-normal);
+  color: var(--color-text-secondary);
+}
+
+.emptyText {
+  max-width: 52ch;
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-muted);
+}
+
+/* Пустое состояние не перехватывает мышь — а кнопки сценариев обязаны. */
+.scenarios {
+  margin-top: var(--space-3);
+  pointer-events: auto;
+}
+
+/* --- Подсказка об отказе --------------------------------------------------
+   Отказ соединять — это ответ системы, а не действие пользователя, поэтому
+   цвет статусный, а не акцентный. */
+.rejection {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-5);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 520px;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-status-error) 45%, var(--color-border));
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-3);
+  z-index: var(--z-popover);
+  animation: rise var(--duration-base) var(--ease-standard);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+}
+
+.rejectionMark {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-status-error);
+}
+
+.rejectionText {
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text);
+}
+
+.rejectionClose {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  font-size: var(--text-caption);
+  line-height: 1;
+}
+
+.rejectionClose:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+/* --- Строка состояния ----------------------------------------------------- */
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--space-3);
+  white-space: nowrap;
+  overflow: hidden;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+}
+
+.counts {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: var(--space-3);
+  font-family: var(--font-numeric);
+}
+
+.selection {
+  color: var(--color-accent-text);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: var(--space-1);
+}
+
+.hotkeys {
+  display: none;
+  flex: none;
+  gap: var(--space-3);
+}
+
+@container (min-width: 940px) {
+  .hotkeys {
+    display: flex;
+  }
+}
+
+.key {
+  padding: 1px var(--space-1-5);
+  margin-right: var(--space-1);
+  background: var(--color-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-numeric);
+  color: var(--color-text-secondary);
+}
+
+.divider {
+  flex: none;
+  width: 1px;
+  height: 14px;
+  background: var(--color-border-subtle);
+}
+
+.validity {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: var(--space-1-5);
+  font-size: var(--text-micro);
+  color: inherit;
+}
+
+.validityButton {
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--radius-pill);
+}
+
+.validityButton:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.warned {
+  color: var(--color-text-secondary);
+}
+
+.warned .validityMark {
+  background: var(--color-status-skipped);
+}
+
+/* --- Панель проблем -------------------------------------------------------
+   Список ошибок и предупреждений графа с указанием виновника: клик по строке
+   выделяет ноду или связь на холсте. */
+.issues {
+  position: absolute;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 46%;
+  overflow-y: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-3);
+  z-index: var(--z-popover);
+  animation: lift var(--duration-base) var(--ease-standard);
+}
+
+/* Своя анимация: у подсказки об отказе `rise` тянет ещё и центрирование по X. */
+@keyframes lift {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.issueList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  list-style: none;
+}
+
+.issue {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1-5) var(--space-2);
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.issue:hover {
+  background: var(--color-hover);
+}
+
+.issueMark {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-status-skipped);
+}
+
+.error .issueMark {
+  background: var(--color-status-error);
+}
+
+.issueText {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-secondary);
+}
+
+.issueCode {
+  flex: none;
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);
+}
+
+.validityMark {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-status-idle);
+}
+
+.valid .validityMark {
+  background: var(--color-status-success);
+}
+
+.invalid .validityMark {
+  background: var(--color-status-error);
+}
+
+.invalid {
+  color: var(--color-text-secondary);
+}

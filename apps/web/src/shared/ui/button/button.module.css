@@ -1,0 +1,120 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-instant) var(--ease-standard);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* --- Размеры ----------------------------------------------------------- */
+
+.sm {
+  height: 28px;
+  padding-inline: var(--space-3);
+  font-size: var(--text-caption);
+}
+
+.md {
+  height: 34px;
+  padding-inline: var(--space-4);
+  font-size: var(--text-ui);
+}
+
+/* --- Варианты ---------------------------------------------------------- */
+
+.primary {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  box-shadow: var(--shadow-accent);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.primary:active:not(:disabled) {
+  background: var(--color-accent-active);
+  box-shadow: none;
+}
+
+/* Выключенная primary сохраняет свой цвет, только гаснет: иначе она неотличима
+   от активной secondary, стоящей рядом. */
+.primary:disabled {
+  background: color-mix(in oklab, var(--color-accent) 22%, var(--color-canvas));
+  color: var(--color-text-secondary);
+  box-shadow: none;
+}
+
+/* Загрузка — это не «недоступно», а «идёт прямо сейчас»: цвет остаётся полным. */
+.primary[aria-busy='true'] {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.secondary {
+  background: var(--color-raised);
+  border-color: var(--color-border);
+  color: var(--color-text);
+  box-shadow: var(--edge-highlight);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--color-hover);
+  border-color: var(--color-border-strong);
+}
+
+.secondary:active:not(:disabled) {
+  background: var(--color-raised);
+}
+
+.secondary:disabled {
+  color: var(--color-text-muted);
+  border-color: var(--color-border-subtle);
+  background: transparent;
+  box-shadow: none;
+}
+
+.ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.ghost:disabled {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+/* --- Слоты ------------------------------------------------------------- */
+
+.slot {
+  display: inline-flex;
+  font-size: 1.15em;
+}
+
+.label {
+  display: inline-block;
+}

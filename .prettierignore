@@ -1,0 +1,6 @@
+apps/.demo-data
+apps/api/drizzle/meta
+coverage
+dist
+docs
+pnpm-lock.yaml

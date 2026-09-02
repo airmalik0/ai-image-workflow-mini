@@ -1,0 +1,120 @@
+/**
+ * Дизайн-токены. Единственное место, где живут «сырые» значения:
+ * компоненты обращаются только к переменным.
+ *
+ * Контраст всех текстовых цветов проверен по WCAG 2.1 AA (≥ 4.5:1) на всех
+ * четырёх поверхностях; см. таблицу в отчёте по задаче 16.
+ */
+:root {
+  color-scheme: dark;
+
+  /* --- Поверхности: четыре уровня глубины ------------------------------ */
+  --color-canvas: #0d0d0f; /* фон приложения, «пустота» под канвасом */
+  --color-surface: #141417; /* панели, шапка */
+  --color-raised: #1b1b20; /* карточки нод, поля ввода */
+  --color-hover: #232329; /* наведение и нажатие на поверхностях */
+
+  /* --- Границы --------------------------------------------------------- */
+  --color-border-subtle: #26262d; /* разделители внутри панели */
+  --color-border: #33333c; /* контур контролов в покое */
+  --color-border-strong: #45454f; /* контур при наведении, активная нода */
+
+  /* --- Текст: три уровня контраста ------------------------------------- */
+  --color-text: #f4f4f6; /* 15.6:1 на --color-raised */
+  --color-text-secondary: #a9aab4; /* 7.4:1 */
+  --color-text-muted: #8b8c97; /* 5.1:1 — минимум, ниже не опускаемся */
+
+  /* --- Акцент: ровно один, и только для действий пользователя ---------- */
+  --color-accent: #ff2e88;
+  --color-accent-hover: #ff4e97;
+  --color-accent-active: #ee2079;
+  --color-accent-ink: #1a0410; /* текст на заливке акцентом: 5.6:1 */
+  --color-accent-text: #ff5ca3; /* акцент как текст на тёмном: 6.0:1 */
+  --color-accent-veil: rgb(255 46 136 / 12%);
+
+  /* --- Статусы job'а: состояние системы, не действие пользователя ------ */
+  --color-status-idle: #8d93a3; /* холодный нейтральный: ещё не запускалась */
+  --color-status-queued: #9c8dff; /* индиго: ждёт своей очереди */
+  --color-status-running: #3dd3e8; /* циан: живой сигнал */
+  --color-status-success: #3fcf8e;
+  --color-status-error: #ff7a66; /* оранжево-красный, уведён от розового акцента */
+  --color-status-skipped: #9a9088; /* тёплый нейтральный: не будет выполнена */
+
+  /* --- Типографика ----------------------------------------------------- */
+  --font-sans:
+    'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-numeric: 'Inter Variable', 'Inter', ui-monospace, monospace;
+
+  --text-micro: 0.6875rem; /* 11px — счётчики, метаданные */
+  --text-caption: 0.75rem; /* 12px — метки, чипы */
+  --text-ui: 0.8125rem; /* 13px — плотный интерфейс, тело ноды */
+  --text-body: 0.875rem; /* 14px — базовый текст */
+  --text-lead: 1rem; /* 16px — подзаголовок */
+  --text-title: 1.25rem; /* 20px — заголовок раздела */
+  --text-display: 1.75rem; /* 28px — заголовок экрана */
+  --text-hero: 2.5rem; /* 40px — пустое состояние, редко */
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  --leading-tight: 1.15;
+  --leading-ui: 1.35;
+  --leading-body: 1.6;
+
+  --tracking-tight: -0.022em; /* от 28px и выше */
+  --tracking-snug: -0.011em; /* 20px */
+  --tracking-normal: 0;
+  --tracking-wide: 0.012em; /* 11–12px, мелкому кеглю нужен воздух */
+
+  /* --- Отступы: шаг 4px ------------------------------------------------ */
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* --- Радиусы --------------------------------------------------------- */
+  --radius-xs: 6px; /* мелкие индикаторы */
+  --radius-sm: 8px; /* вложенные блоки */
+  --radius-md: 12px; /* кнопки, поля */
+  --radius-lg: 16px; /* панели, карточки нод */
+  --radius-pill: 999px; /* чипы и статус-пилюли */
+
+  /* --- Глубина: на тёмной теме её создаёт свет сверху, а не тень -------- */
+  --edge-highlight: inset 0 1px 0 rgb(255 255 255 / 5%);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-2: 0 10px 28px -12px rgb(0 0 0 / 70%);
+  --shadow-3: 0 28px 64px -16px rgb(0 0 0 / 80%);
+  --shadow-accent: 0 6px 20px -8px rgb(255 46 136 / 55%);
+
+  /* --- Движение -------------------------------------------------------- */
+  --duration-instant: 90ms;
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 360ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.25, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* --- Слои ------------------------------------------------------------ */
+  --z-canvas: 0;
+  --z-panel: 10;
+  --z-popover: 100;
+  --z-modal: 1000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 1ms;
+    --duration-fast: 1ms;
+    --duration-base: 1ms;
+    --duration-slow: 1ms;
+  }
+}

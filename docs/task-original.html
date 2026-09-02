@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Image Workflow Mini — тестовое задание</title>
+<style>
+:root{--bg:#0b0e11;--panel:#11161b;--line:#2a333d;--text:#eef3f8;--muted:#97a3ae;--accent:#7d8cff;--green:#3bd5a0;--amber:#f1bd63;--red:#ff7373;--blue:#58a9ff}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.58 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}a{color:inherit;text-decoration:none}header{position:sticky;top:0;z-index:50;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#0b0e11ef;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}.logo{font-weight:800}.small{font-size:12px;color:var(--muted)}.shell{display:grid;grid-template-columns:280px minmax(0,1fr)}nav{position:sticky;top:64px;height:calc(100vh - 64px);overflow:auto;padding:15px 12px;border-right:1px solid var(--line)}nav a{display:block;padding:8px 10px;border-radius:8px;color:#b8c2cc}nav a:hover{background:#171d23;color:#fff}main{padding:28px;max-width:1500px;width:100%}.hero{border:1px solid var(--line);border-radius:18px;padding:28px;background:linear-gradient(140deg,#141a21,#0f1216 63%,#17131b)}.hero h1{font-size:34px;line-height:1.1;margin:0 0 12px;max-width:1050px}.hero p{font-size:16px;color:#bdc7d0;max-width:1100px}section{margin:30px 0}h2{font-size:24px;margin:0 0 12px}h3{font-size:16px;margin:0 0 8px}p{margin:7px 0 12px}.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#8693a0;margin-bottom:6px}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--panel);min-width:0}.card p{color:#bdc6d0}.callout{padding:14px 16px;border:1px solid #3b4450;background:#141920;border-radius:12px;margin:12px 0}.good{border-color:#285e4b;background:#142922}.warn{border-color:#66542d;background:#2b2518}.bad{border-color:#633131;background:#2b1919}.flow{background:#080b0e;border:1px solid var(--line);border-radius:14px;padding:18px;overflow:auto}.flow pre{margin:0;white-space:pre;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfd8e1}.code{background:#080b0e;border:1px solid var(--line);border-radius:10px;padding:12px;white-space:pre-wrap;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfd8e1}table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line)}th,td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#151b22;color:#bcc5cf;font-size:12px}ul{margin:7px 0 7px 18px;padding:0}li{margin:4px 0;color:#c5ced7}.badge{display:inline-block;padding:4px 7px;border-radius:99px;font-size:11px;font-weight:700}.must{background:#173a2f;color:#7ce2ba}.bonus{background:#463816;color:#ffd17a}.info{background:#183650;color:#8fc8ff}.score{font-weight:800;font-size:20px}@media(max-width:1000px){.shell{grid-template-columns:1fr}nav{display:none}main{padding:18px}.grid2,.grid3{grid-template-columns:1fr}.hero h1{font-size:28px}}
+</style>
+</head>
+<body>
+<header><div><div class="logo">AI Image Workflow Mini</div><div class="small">Тестовое задание</div></div><div class="small">8–12 часов</div></header>
+<div class="shell">
+<nav><a href="#test-goal">6. Цель тестового</a><a href="#time">7. Время и API</a><a href="#task">8. Задача</a><a href="#canvas">9. Canvas</a><a href="#ai">10. AI integration</a><a href="#preset">11. Preset</a><a href="#parallel">12. Parallel execution</a><a href="#jobs">13. Jobs / statuses</a></nav>
+<main>
+<section class="hero" id="test-goal"><div class="kicker">Техническая часть</div><h1>Тестовое: AI Image Workflow Mini</h1><p>Нужно собрать небольшой node-based редактор и провести одну реальную AI-генерацию через backend. Тест проверяет frontend, backend, работу с AI API и понимание выполнения графа.</p><div class="callout"><b>Frontend architecture:</b> архитектура проекта — <b>Feature-Sliced Design (FSD)</b>. Ожидаем понятное разделение ответственности между слоями и отсутствие бизнес-логики в случайных UI-компонентах. Не требуется «идеальный FSD» — важнее осмысленная структура проекта.</div></section>
+<section id="time"><h2>7. Время и формат</h2><div class="grid3"><div class="card"><span class="badge info">Ожидаемое время</span><div class="score" style="margin-top:8px">8–12 часов</div><p>Не ожидаем несколько дней работы.</p></div><div class="card"><span class="badge info">AI coding tools</span><h3 style="margin-top:8px">Можно использовать</h3><p>Codex, Claude Code, Copilot и другие инструменты разрешены.</p></div><div class="card"><span class="badge info">API</span><h3 style="margin-top:8px">Предоставим по запросу</h3><p>Тестовый image-generation API key и документацию выдадим кандидату по запросу.</p></div></div><div class="callout warn">Если часть функционала не помещается во временной лимит, лучше оставить работающую основу и описать недоделанную часть в README.</div></section>
+<section id="task"><h2>8. Что нужно сделать</h2><div class="flow"><pre>Сценарий 1
+
+[ Prompt ]
+    ↓
+[ Generate Image ]
+    ↓
+[ Result ]
+
+Сценарий 2
+
+[ Image Input ]
+      ↓
+[ Edit Image ]
+      ↓
+[ Result ]
+
+Обязательное ветвление
+
+                  ┌→ [ Generate A ] → [ Result A ]
+[ Prompt ] ───────┤
+                  └→ [ Generate B ] → [ Result B ]</pre></div></section>
+<section id="canvas"><h2>9. Canvas — визуальный редактор ⭐</h2><span class="badge bonus">Задание со звездочкой</span><p style="margin-top:12px"><b>Полноценный визуальный Canvas необязателен.</b> Если успеваете — реализуйте node-based редактор через React Flow / xyflow или другую готовую библиотеку. Писать canvas engine с нуля не нужно.</p><div class="grid3"><div class="card"><h3>Prompt</h3><p>Текстовый ввод.</p></div><div class="card"><h3>Image Input</h3><p>Загрузка изображения.</p></div><div class="card"><h3>Generate Image</h3><p>Генерация через AI.</p></div><div class="card"><h3>Edit Image</h3><p>Редактирование изображения.</p></div><div class="card"><h3>Result</h3><p>Предпросмотр результата.</p></div></div><p style="margin-top:14px"><b>Если делаете Canvas, желательно поддержать:</b> add, move, connect, delete, branching, selection.</p><div class="callout"><b>Typed ports:</b> достаточно типов <code>text</code> и <code>image</code>. Несовместимые соединения нужно блокировать.</div><div class="callout good"><b>Важно:</b> отсутствие полноценного Canvas не считается невыполненным тестовым. Но graph definition, dependencies, branching и parallel execution остаются обязательной частью — workflow можно представить как данные и управлять им без визуального редактора.</div></section>
+<section id="ai"><h2>10. AI integration — интеграция нейросети</h2><p>Нужен хотя бы один реальный вызов image-generation API.</p><div class="flow"><pre>Browser
+   ↓
+Backend
+   ↓
+AI API
+   ↓
+Backend
+   ↓
+Result node</pre></div><div class="callout bad"><b>API key не должен попадать во frontend.</b></div><ul><li>text → image;</li><li>отображение результата;</li><li>loading/error state;</li><li>timeout/error handling.</li></ul><p>Edit Image можно реализовать, если выбранный API поддерживает редактирование. Иначе достаточно описать подход в README.</p></section>
+<section id="preset"><h2>11. Preset — готовый набор настроек</h2><p>В продукте есть Preset: готовый набор референсов и правил для генерации изображения. Полноценный Preset Editor в тестовом не нужен.</p><div class="code">{
+  "id": "preset-demo",
+  "name": "Premium 3D",
+  "mainPrompt": "premium minimal 3D visual...",
+  "negativePrompt": "clutter, noisy background...",
+  "references": [
+    "/references/ref-1.png",
+    "/references/ref-2.png"
+  ]
+}</div><div class="flow"><pre>User Prompt
+     +
+Selected Preset
+     ↓
+Request Builder
+     ├── mainPrompt
+     ├── negativePrompt
+     └── references
+            ↓
+          AI API</pre></div><div class="callout"><b>Важно:</b> Preset должен быть отдельной сущностью в data model, а не логикой, спрятанной внутри UI-компонента.</div></section>
+<section id="parallel"><h2>12. Parallel execution — параллельное выполнение</h2><span class="badge must">Обязательно</span><div class="flow" style="margin-top:12px"><pre>                   ┌→ Generate A
+Prompt ────────────┤
+                   └→ Generate B</pre></div><p>Независимые ветки должны иметь возможность выполняться одновременно.</p><ul><li><b>Graph definition</b> — описание графа;</li><li><b>Graph execution</b> — выполнение графа;</li><li><b>Dependencies</b> — зависимости;</li><li><b>Parallel branches</b> — независимые ветки.</li></ul></section>
+<section id="jobs"><h2>13. Jobs и состояния</h2><p><b>Job — отдельная задача выполнения</b>, например один вызов Generate Image.</p><div class="grid3"><div class="card"><h3>idle</h3><p>Не запускалась.</p></div><div class="card"><h3>queued</h3><p>Ждет выполнения.</p></div><div class="card"><h3>running</h3><p>Выполняется.</p></div><div class="card"><h3>success</h3><p>Готово.</p></div><div class="card"><h3>error</h3><p>Ошибка.</p></div></div><div class="flow" style="margin-top:14px"><pre>POST /runs
+    ↓
+{ runId }
+
+GET /runs/:runId
+    ↓
+queued / running / completed / failed</pre></div><p>Допустим polling, SSE или WebSocket.</p><div class="callout good"><b>Retry — повтор</b> failed node должен быть доступен.</div></section>
+</main>
+</div>
+</body>
+</html>

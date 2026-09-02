@@ -1,0 +1,66 @@
+.uploader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+}
+
+/* Рамка держит пропорцию 16:9 и до загрузки, и после: панель не прыгает. */
+.frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--color-canvas);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.placeholder {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Нативное поле файла спрятано: диалог открывает кнопка из дизайн-системы,
+   но само поле остаётся в DOM — им пользуются и клавиатура, и тесты. */
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.meta {
+  font-family: var(--font-numeric);
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+}
+
+.error {
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-status-error);
+}

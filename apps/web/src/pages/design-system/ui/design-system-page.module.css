@@ -1,0 +1,432 @@
+/* Каркас будущего редактора: шапка, три колонки, док снизу.
+   Центр сейчас занимает витрина компонентов — в задаче 22 её место займёт канвас. */
+.shell {
+  display: grid;
+  grid-template-rows: 52px minmax(0, 1fr) auto;
+  height: 100%;
+  background: var(--color-canvas);
+}
+
+/* --- Шапка -------------------------------------------------------------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-inline: var(--space-4);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-ui);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-snug);
+}
+
+.brandMark {
+  font-size: 20px;
+  color: var(--color-text-secondary);
+}
+
+.brandDivider {
+  width: 1px;
+  height: 18px;
+  background: var(--color-border);
+}
+
+.breadcrumb {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.topbarSpacer {
+  flex: 1;
+}
+
+/* --- Три колонки -------------------------------------------------------- */
+
+.body {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr) 320px;
+  min-height: 0;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.railLeft {
+  border-right: 1px solid var(--color-border-subtle);
+}
+
+.railRight {
+  border-left: 1px solid var(--color-border-subtle);
+}
+
+.railTitle {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+}
+
+/* Список типов нод собран из NODE_SPECS: рельс показывает модель данных,
+   а не пустую рамку «здесь что-то будет». */
+.paletteList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.paletteItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--edge-highlight);
+}
+
+.paletteName {
+  font-size: var(--text-caption);
+  color: var(--color-text);
+  line-height: var(--leading-ui);
+}
+
+.ports {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Тип порта кодируется формой, а не цветом: на канвасе уже шесть цветов статусов.
+   Квадрат — text, круг — image. */
+.port {
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--color-text-muted);
+}
+
+.portImage {
+  border-radius: var(--radius-pill);
+}
+
+.portsDivider {
+  width: 9px;
+  height: 1px;
+  background: var(--color-border-strong);
+}
+
+.note {
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: var(--text-micro);
+  line-height: var(--leading-ui);
+}
+
+.inspectorRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-2);
+  font-size: var(--text-caption);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.inspectorRow:last-child {
+  border-bottom: none;
+}
+
+.inspectorKey {
+  color: var(--color-text-secondary);
+}
+
+.inspectorValue {
+  color: var(--color-text-muted);
+  font-size: var(--text-micro);
+}
+
+.placeholderTask {
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Разделы без карточки ------------------------------------------------ */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sectionHead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.sectionNote {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  max-width: 62ch;
+}
+
+/* --- Центральная колонка ------------------------------------------------ */
+
+.main {
+  overflow-y: auto;
+  padding: var(--space-10) var(--space-8) var(--space-16);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.lede {
+  font-size: var(--text-lead);
+  line-height: var(--leading-body);
+  color: var(--color-text-secondary);
+  max-width: 60ch;
+}
+
+.rule {
+  border-left: 2px solid var(--color-accent);
+  padding-left: var(--space-4);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--color-text-secondary);
+  max-width: 58ch;
+}
+
+.ruleTerm {
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+}
+
+/* --- Шина статусов ------------------------------------------------------ */
+
+.bus {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ствол шины: одна линия, шесть отводов. */
+.bus::before {
+  content: '';
+  position: absolute;
+  inset-block: 22px;
+  left: 0;
+  width: 1px;
+  background: var(--color-border-strong);
+}
+
+.busRow {
+  position: relative;
+  display: grid;
+  grid-template-columns: 152px 1fr;
+  align-items: center;
+  justify-items: start;
+  gap: var(--space-4);
+  padding: var(--space-3) 0 var(--space-3) var(--space-6);
+}
+
+.busRow + .busRow {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.busRow::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: var(--space-4);
+  height: 1px;
+  background: var(--color-border-strong);
+}
+
+.busMeaning {
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-muted);
+}
+
+.busKey {
+  color: var(--color-text-secondary);
+}
+
+/* --- Сетка образцов ----------------------------------------------------- */
+
+.specimenGrid {
+  display: grid;
+  grid-template-columns: 88px repeat(4, minmax(0, 1fr));
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+}
+
+.specimenHead {
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);
+}
+
+.specimenLabel {
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.groupLabel {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+/* --- Основания: цвет, кегль, шаг ---------------------------------------- */
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: var(--space-3);
+}
+
+.swatch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.swatchChip {
+  height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.swatchName {
+  font-size: var(--text-micro);
+  color: var(--color-text-secondary);
+}
+
+.swatchHex {
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.scale {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.scaleRow {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  align-items: baseline;
+  gap: var(--space-4);
+}
+
+.scaleMeta {
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.steps {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.stepBar {
+  background: var(--color-accent-veil);
+  border-top: 2px solid var(--color-accent);
+  height: 28px;
+}
+
+.stepValue {
+  font-size: var(--text-micro);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Док снизу ---------------------------------------------------------- */
+
+.dock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border-subtle);
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.dockTitle {
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-medium);
+}
+
+@media (width <= 1280px) {
+  .body {
+    grid-template-columns: 200px minmax(0, 1fr) 280px;
+  }
+
+  .main {
+    padding-inline: var(--space-6);
+  }
+}
+
+/* Витрина таймлайна: его шапка и полки рассчитаны на полную ширину колонки. */
+.timeline {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}

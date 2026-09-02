@@ -1,0 +1,113 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.label {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+}
+
+/* Счётчик стоит в строке метки, а не под полем: так он не отбирает высоту
+   у многострочного промпта и всегда виден, пока пользователь печатает. */
+.counter {
+  font-size: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.counterNear {
+  color: var(--color-text);
+}
+
+.counterFull {
+  color: var(--color-status-error);
+}
+
+.control {
+  width: 100%;
+  background: var(--color-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--edge-highlight);
+  color: var(--color-text);
+  font-size: var(--text-body);
+  line-height: var(--leading-ui);
+  padding: 9px var(--space-3);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.control::placeholder {
+  color: var(--color-text-muted);
+}
+
+.control:hover:not(:disabled, :focus) {
+  border-color: var(--color-border-strong);
+}
+
+.control:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow:
+    var(--edge-highlight),
+    0 0 0 3px var(--color-accent-veil);
+}
+
+.control:disabled {
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  /* Выключенное поле не должно предлагать себя тянуть за угол: это обещание
+     редактирования, которого не будет. */
+  resize: none;
+}
+
+.multiline {
+  min-height: 96px;
+  resize: vertical;
+  line-height: var(--leading-body);
+  padding-block: var(--space-3);
+}
+
+.invalid {
+  border-color: var(--color-status-error);
+}
+
+.invalid:focus {
+  border-color: var(--color-status-error);
+  box-shadow:
+    var(--edge-highlight),
+    0 0 0 3px rgb(255 122 102 / 16%);
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-caption);
+  line-height: var(--leading-ui);
+  color: var(--color-text-muted);
+}
+
+.noteError {
+  color: var(--color-status-error);
+}
+
+.noteIcon {
+  font-size: 1.05em;
+  margin-top: 0.15em;
+}

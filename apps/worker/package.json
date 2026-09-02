@@ -1,0 +1,27 @@
+{
+  "name": "@workflow/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@workflow/api": "workspace:*",
+    "@workflow/contracts": "workspace:*",
+    "@workflow/core": "workspace:*",
+    "bullmq": "^6.3.4",
+    "ioredis": "^6.0.0",
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.13"
+  }
+}
