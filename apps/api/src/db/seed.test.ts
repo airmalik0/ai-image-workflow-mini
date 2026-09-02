@@ -31,6 +31,18 @@ describe.skipIf(unavailable !== null)('seedDatabase', () => {
     return { database, storage: new FsFileStorage({ dataDir: join(root, 'files') }) }
   }
 
+  /*
+   * Пресет описывает, ЧТО генерировать, а не ЧЕМ. Прибитая в сиде модель конкретного
+   * вендора превращает каждый пресет в мину: на стенде с ключом другого провайдера
+   * нода падает с VALIDATION_FAILED, хотя пользователь модель не выбирал — она
+   * приехала из пресета. Проверяющий наступает на это первым же кликом.
+   */
+  it('ни один пресет сида не прибивает модель конкретного провайдера', () => {
+    for (const preset of SEED_PRESETS) {
+      expect(preset.defaults?.model, `пресет «${preset.name}»`).toBeUndefined()
+    }
+  })
+
   it('заводит все пресеты и все референсные картинки', async () => {
     const { database: testDatabase, storage } = await fresh()
 
@@ -51,38 +63,42 @@ describe.skipIf(unavailable !== null)('seedDatabase', () => {
     expect(await new DrizzlePresetRepository(testDatabase.db).list()).toEqual(before)
   })
 
-  it('кладёт «Premium 3D» из ТЗ с двумя рабочими референсами', async () => {
+  it('кладёт «Premium 3D» из ТЗ: промпты есть, вендорских настроек нет', async () => {
     const { database: testDatabase, storage } = await fresh()
     await seedDatabase({ db: testDatabase.db, storage })
 
     const preset = await new DrizzlePresetRepository(testDatabase.db).findById('preset_premium_3d')
 
     expect(preset?.name).toBe('Premium 3D')
+    expect(preset?.mainPrompt).toContain('premium minimal 3D visual')
     expect(preset?.negativePrompt).toContain('clutter')
-    expect(preset?.references).toHaveLength(2)
-    expect(preset?.defaults?.model).toBeTruthy()
-
-    for (const fileId of preset?.references ?? []) {
-      const file = await storage.get(fileId)
-      expect(file.mimeType).toBe('image/png')
-      // сигнатура PNG: сид обязан класть настоящую картинку, а не заглушку
-      expect([...file.bytes.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10])
-    }
+    expect(preset?.defaults?.aspectRatio).toBe('1:1')
   })
 
-  it('все ссылки пресетов ведут в файлы, учтённые в таблице files', async () => {
+  /*
+   * Нарисованные кодом картинки боевая модель не «учитывает как стиль», а копирует:
+   * с референсом-сферой вместо отредактированной фотографии приезжает сфера.
+   * Поэтому к пресетам сида они не прицеплены, но в хранилище лежат готовым набором
+   * для пользовательских пресетов — и обязаны оставаться настоящими PNG.
+   */
+  it('картинки сида лежат в хранилище настоящими PNG и ни к чему не прицеплены', async () => {
     const { database: testDatabase, storage } = await fresh()
     await seedDatabase({ db: testDatabase.db, storage })
+
     const presets = await new DrizzlePresetRepository(testDatabase.db).list()
-    const referenced = new Set(presets.flatMap((preset) => preset.references))
+    expect(presets.flatMap((preset) => preset.references)).toEqual([])
 
     const rows = await testDatabase.pool.query<{ id: string }>(
       "select id from files where source = 'seed'",
     )
-    const stored = new Set(rows.rows.map((row) => row.id))
+    expect(rows.rows).toHaveLength(buildReferenceImages().length)
 
-    expect(referenced.size).toBeGreaterThan(0)
-    for (const fileId of referenced) expect(stored.has(fileId)).toBe(true)
+    for (const row of rows.rows) {
+      const file = await storage.get(row.id)
+      expect(file.mimeType).toBe('image/png')
+      // сигнатура PNG: сид обязан класть настоящую картинку, а не заглушку
+      expect([...file.bytes.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10])
+    }
   })
 
   it('идентификаторы референсов детерминированы: сид на чистой машине даёт те же ссылки', async () => {

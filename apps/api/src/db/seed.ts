@@ -20,16 +20,21 @@ interface SeedPreset {
   name: string
   mainPrompt: string
   negativePrompt: string | null
-  /** Слаги референсных картинок из `reference-images.ts`. */
-  references: readonly string[]
   defaults: PresetDefaults | null
 }
-
-const DEFAULT_MODEL = 'gemini-3.1-flash-image'
 
 /**
  * Пресеты сида. Первый — тот самый «Premium 3D» из ТЗ; остальные добавлены, чтобы
  * выбор пресета в UI был осмысленным, а не витриной из одного элемента.
+ *
+ * Пресет сида несёт промпты — и ни модель, ни референсы. Прибитая модель вендора
+ * превращала каждый пресет в мину: на стенде с ключом другого провайдера нода
+ * падала с VALIDATION_FAILED, хотя пользователь модель не выбирал. А нарисованные
+ * кодом референсы боевая модель не «учитывает как стиль», а копирует: вместо
+ * отредактированной фотографии приезжала та самая сфера с градиентом. Механизм
+ * референсов от этого никуда не делся — он собран, покрыт тестами и доступен
+ * пользовательским пресетам через CRUD; картинки сида лежат готовым набором,
+ * который можно прицепить к своему пресету.
  *
  * Идентификаторы — читаемые слаги, а не uuid: на них ссылаются ноды сохранённых
  * workflow, и пересев базы не должен ломать эти ссылки.
@@ -46,8 +51,7 @@ export const SEED_PRESETS: readonly SeedPreset[] = [
       'premium minimal 3D visual, soft studio lighting, matte pastel materials, ' +
       'gentle depth of field, subtle rim light, clean neutral backdrop, product-grade render',
     negativePrompt: 'clutter, noisy background, harsh shadows, text, watermark, logo',
-    references: ['ref-premium-3d-a', 'ref-premium-3d-b'],
-    defaults: { model: DEFAULT_MODEL, aspectRatio: '1:1' },
+    defaults: { aspectRatio: '1:1' },
   },
   {
     id: 'preset_studio_packshot',
@@ -56,8 +60,7 @@ export const SEED_PRESETS: readonly SeedPreset[] = [
       'studio packshot on seamless white cyclorama, softbox key light with large diffuser, ' +
       'accurate colours, crisp edges, soft contact shadow, catalogue photography',
     negativePrompt: 'props, reflections of the crew, colour cast, blown highlights, text',
-    references: ['ref-studio-packshot'],
-    defaults: { model: DEFAULT_MODEL, aspectRatio: '4:3' },
+    defaults: { aspectRatio: '4:3' },
   },
   {
     id: 'preset_watercolor_sketch',
@@ -66,8 +69,7 @@ export const SEED_PRESETS: readonly SeedPreset[] = [
       'loose watercolour illustration on cold-pressed paper, visible paper grain, ' +
       'wet-on-wet bleeding, pastel palette, generous white space, light ink contour',
     negativePrompt: 'photorealism, 3D render, heavy black outlines, digital gradients',
-    references: ['ref-watercolor'],
-    defaults: { model: DEFAULT_MODEL, aspectRatio: '3:4' },
+    defaults: { aspectRatio: '3:4' },
   },
   {
     id: 'preset_neon_poster',
@@ -76,8 +78,7 @@ export const SEED_PRESETS: readonly SeedPreset[] = [
       'retro-futuristic neon poster, deep indigo night, magenta and cyan glow, ' +
       'perspective grid horizon, volumetric haze, high contrast, VHS grain',
     negativePrompt: 'daylight, pastel palette, empty flat background, text, watermark',
-    references: ['ref-neon-poster'],
-    defaults: { model: DEFAULT_MODEL, aspectRatio: '16:9' },
+    defaults: { aspectRatio: '16:9' },
   },
   {
     id: 'preset_soft_portrait',
@@ -86,8 +87,7 @@ export const SEED_PRESETS: readonly SeedPreset[] = [
       'portrait lit by a large soft key at 45 degrees, warm skin tones, ' +
       'shallow depth of field, natural texture retained, muted background falloff',
     negativePrompt: 'plastic skin, over-smoothing, double catchlights, distorted hands, text',
-    references: ['ref-soft-portrait'],
-    defaults: { model: DEFAULT_MODEL, aspectRatio: '3:4' },
+    defaults: { aspectRatio: '3:4' },
   },
 ]
 
@@ -97,13 +97,11 @@ export const SEED_PRESETS: readonly SeedPreset[] = [
  * а не один раз руками.
  */
 export async function seedDatabase(deps: SeedDependencies): Promise<SeedResult> {
-  const fileIdBySlug = new Map<string, string>()
   let filesInserted = 0
 
   for (const image of buildReferenceImages()) {
     // хранилище адресуется содержимым, поэтому повторный put — не запись, а вычисление id
     const fileId = await deps.storage.put(image.bytes, image.mimeType)
-    fileIdBySlug.set(image.slug, fileId)
 
     const inserted = await deps.db
       .insert(files)
@@ -123,11 +121,7 @@ export async function seedDatabase(deps: SeedDependencies): Promise<SeedResult> 
     name: preset.name,
     mainPrompt: preset.mainPrompt,
     negativePrompt: preset.negativePrompt,
-    referenceFileIds: preset.references.map((slug) => {
-      const fileId = fileIdBySlug.get(slug)
-      if (fileId === undefined) throw new Error(`Референс «${slug}» не найден среди картинок сида`)
-      return fileId
-    }),
+    referenceFileIds: [],
     defaults: preset.defaults,
   }))
 
