@@ -78,8 +78,7 @@ export function buildTestDependencies(overrides: TestAppOverrides = {}): AppDepe
     files,
     fileCatalog: overrides.fileCatalog ?? new InMemoryFileCatalog(),
     dispatcher:
-      overrides.dispatcher ??
-      new LocalJobDispatcher({ provider: providers.active, storage: files, presets }),
+      overrides.dispatcher ?? new LocalJobDispatcher({ providers, storage: files, presets }),
     events: overrides.events ?? new InMemoryRunEventBus(),
     providers,
     health: {
@@ -102,6 +101,8 @@ function singleProviderRegistry(provider: ImageProvider): ProviderRegistry {
     models: provider.models,
     demo: null,
     get: (id) => (id === provider.id ? provider : undefined),
+    // выбирать не из кого: провайдер один, и он исполняет любую модель
+    forModel: () => provider,
   }
 }
 

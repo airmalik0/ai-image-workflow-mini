@@ -75,7 +75,11 @@ class ThrowingProvider implements ImageProvider {
 }
 
 function execution(provider: ImageProvider): ExecutionDeps {
-  return { provider, storage: new InMemoryFileStorage(), presets: new InMemoryPresetRepository() }
+  return {
+    providers: { forModel: () => provider },
+    storage: new InMemoryFileStorage(),
+    presets: new InMemoryPresetRepository(),
+  }
 }
 
 describe('processJob', () => {

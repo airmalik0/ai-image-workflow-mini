@@ -215,4 +215,42 @@ describe('createProviderRegistry', () => {
     expect(registry.get('gemini')?.id).toBe('gemini')
     expect(registry.get('midjourney')).toBeUndefined()
   })
+
+  it('forModel отдаёт провайдера, которому принадлежит модель', () => {
+    const registry = createProviderRegistry(
+      { GEMINI_API_KEY: 'g', OPENAI_API_KEY: 'o' },
+      { storage },
+    )
+
+    // список моделей — обещание интерфейса; каждая обязана иметь исполнителя
+    for (const model of registry.models) {
+      expect(registry.forModel(model.id).id).toBe(model.providerId)
+    }
+  })
+
+  it('forModel без модели отдаёт активный провайдер', () => {
+    const registry = createProviderRegistry({ OPENAI_API_KEY: 'o' }, { storage })
+
+    expect(registry.forModel(null).id).toBe('openai')
+  })
+
+  it('forModel на неизвестной модели отдаёт активный, а не молча заглушку', () => {
+    const registry = createProviderRegistry({ OPENAI_API_KEY: 'o' }, { storage })
+
+    // отказ активного провайдера «такой модели нет» честнее чужой картинки
+    expect(registry.forModel('midjourney-7').id).toBe('openai')
+  })
+
+  it('forModel отдаёт обёрнутый предохранителем провайдер, а не голый боевой', async () => {
+    const quota = new InMemoryDemoQuota(1, 1)
+    const registry = createProviderRegistry(
+      { OPENAI_API_KEY: 'o' },
+      { storage, demoQuota: quota, fetch: () => Promise.reject(new Error('в тесте сети нет')) },
+    )
+
+    // квота исчерпана: выбор по модели OpenAI обязан упереться в предохранитель,
+    // иначе его можно обойти, ткнув в модель на ноде
+    const image = await generateFor(registry.forModel('gpt-image-2'), 'generateImage-1')
+    expect(image.mimeType).toBe('image/png')
+  })
 })

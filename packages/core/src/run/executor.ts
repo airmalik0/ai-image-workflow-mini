@@ -1,13 +1,13 @@
 import type { JobOutput, WorkflowNode } from '@workflow/contracts'
 import { DomainError } from '../errors.js'
 import type { FileStorage } from '../ports/file-storage.js'
-import type { ImageProvider, ImageRef, RequestOrigin } from '../ports/image-provider.js'
+import type { ImageRef, ProviderSelector, RequestOrigin } from '../ports/image-provider.js'
 import type { ResolvedInputs } from '../ports/job-dispatcher.js'
 import type { PresetLookup } from '../ports/repositories.js'
-import { buildEditRequest, buildProviderRequest } from '../preset/request-builder.js'
+import { buildEditRequest, buildProviderRequest, resolveModel } from '../preset/request-builder.js'
 
 export interface ExecutionDeps {
-  provider: ImageProvider
+  providers: ProviderSelector
   storage: FileStorage
   presets: PresetLookup
 }
@@ -38,31 +38,37 @@ export async function executeNode(
     }
 
     case 'generateImage': {
+      const preset = await loadPreset(deps, node.data.presetId, node.id)
+      // провайдер выбирается до сборки запроса: запрос собирается под возможности
+      // того движка, который его и выполнит
+      const provider = deps.providers.forModel(resolveModel(node.data, preset))
       const request = buildProviderRequest({
         userPrompt: requireText(inputs, 'prompt', node.id),
-        preset: await loadPreset(deps, node.data.presetId, node.id),
+        preset,
         params: node.data,
-        capabilities: deps.provider.capabilities,
+        capabilities: provider.capabilities,
         origin,
       })
-      const image = await deps.provider.generate(request, signal)
+      const image = await provider.generate(request, signal)
       return { type: 'image', fileId: await deps.storage.put(image.bytes, image.mimeType) }
     }
 
     case 'editImage': {
-      if (!deps.provider.capabilities.edit) {
-        throw invalid(node.id, `провайдер «${deps.provider.id}» не умеет редактировать изображения`)
+      const preset = await loadPreset(deps, node.data.presetId, node.id)
+      const provider = deps.providers.forModel(resolveModel(node.data, preset))
+      if (!provider.capabilities.edit) {
+        throw invalid(node.id, `провайдер «${provider.id}» не умеет редактировать изображения`)
       }
       const request = buildEditRequest({
         // текст со входа важнее поля ноды: соединённый порт — более явное намерение
         userPrompt: optionalText(inputs, 'instruction') ?? node.data.instruction,
-        preset: await loadPreset(deps, node.data.presetId, node.id),
+        preset,
         params: node.data,
-        capabilities: deps.provider.capabilities,
+        capabilities: provider.capabilities,
         image: requireImage(inputs, 'image', node.id),
         origin,
       })
-      const image = await deps.provider.edit(request, signal)
+      const image = await provider.edit(request, signal)
       return { type: 'image', fileId: await deps.storage.put(image.bytes, image.mimeType) }
     }
 

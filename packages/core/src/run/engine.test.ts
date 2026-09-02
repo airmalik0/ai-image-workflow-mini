@@ -158,7 +158,11 @@ function createHarness(graph: WorkflowGraph, options: HarnessOptions = {}) {
     // кодирования PNG. Само кодирование проверяется в png.test.ts
     size: 64,
   })
-  const dispatcher = new LocalDispatcher({ provider, storage, presets })
+  const dispatcher = new LocalDispatcher({
+    providers: { forModel: () => provider },
+    storage,
+    presets,
+  })
 
   let runId = ''
   let waiters: Array<() => void> = []

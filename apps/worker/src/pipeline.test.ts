@@ -103,7 +103,11 @@ describe.skipIf(skipReason !== null)('API + worker через настоящий
     jobWorker = createJobWorker({
       connection: redisConnection(url),
       concurrency: 2,
-      execution: { provider, storage, presets: new InMemoryPresetRepository() },
+      execution: {
+        providers: { forModel: () => provider },
+        storage,
+        presets: new InMemoryPresetRepository(),
+      },
       outcomes: outcomesQueue,
       cancellation,
     })

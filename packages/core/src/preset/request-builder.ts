@@ -29,6 +29,16 @@ export interface BuildInput {
 const DEFAULT_ASPECT_RATIO = '1:1'
 
 /**
+ * Модель, которой будет исполнена нода: явное значение ноды → defaults пресета →
+ * `null` («провайдер подставит свою»). Отдельная функция, потому что по этому же
+ * значению выбирается провайдер: разойдись выбор со сборкой запроса — нода ушла бы
+ * одному движку с моделью другого.
+ */
+export function resolveModel(params: GenerateParams, preset: Preset | null): string | null {
+  return params.model ?? preset?.defaults?.model ?? null
+}
+
+/**
  * Утвердительная формулировка негатива для провайдеров без отдельного поля.
  * Список слов через запятую («clutter, noise») модели воспринимают как описание
  * желаемого и охотно дорисовывают именно то, что просили убрать, — проверено
@@ -57,7 +67,7 @@ export function buildProviderRequest(input: BuildInput): GenerateRequest {
     prompt: buildPrompt(input, supportsNegative ? '' : negative),
     negativePrompt: supportsNegative ? negative : null,
     references: buildReferences(preset, capabilities),
-    model: params.model ?? preset?.defaults?.model ?? null,
+    model: resolveModel(params, preset),
     aspectRatio: pickAspectRatio(params, preset, capabilities),
   }
 

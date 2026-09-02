@@ -1,6 +1,6 @@
 import type { ModelDescriptor } from '@workflow/contracts'
 import { DomainError, FakeProvider } from '@workflow/core'
-import type { FakeFailure, FileStorage, ImageProvider } from '@workflow/core'
+import type { FakeFailure, FileStorage, ImageProvider, ProviderSelector } from '@workflow/core'
 import { DemoLimitedProvider } from './demo-limited-provider.js'
 import type { DemoQuota } from './demo-quota.js'
 import { GeminiProvider } from './gemini/gemini-provider.js'
@@ -44,7 +44,7 @@ export interface ProviderRegistryDeps {
   demoQuota?: DemoQuota
 }
 
-export interface ProviderRegistry {
+export interface ProviderRegistry extends ProviderSelector {
   /** Провайдер, которым исполняются ноды без явно выбранной модели. */
   readonly active: ImageProvider
   readonly byId: ReadonlyMap<string, ImageProvider>
@@ -100,6 +100,7 @@ export function createProviderRegistry(
   if (demo !== null) guardLiveProviders(byId, demo)
 
   const active = selectActive(value(env.IMAGE_PROVIDER) ?? 'auto', byId)
+  const owners = modelOwners(byId)
 
   return {
     active,
@@ -107,7 +108,29 @@ export function createProviderRegistry(
     models: [...byId.values()].flatMap((provider) => provider.models),
     demo,
     get: (id) => byId.get(id),
+    // модель, которой нет ни у кого, уходит активному провайдеру: его отказ
+    // «такой модели нет» — честный ответ, а подстановка чужого движка была бы
+    // той самой тихой подменой, которая здесь запрещена
+    forModel: (model) => (model === null ? active : (owners.get(model) ?? active)),
   }
+}
+
+/**
+ * Модель → провайдер, который её исполняет. Строится по самим провайдерам, а не
+ * по отдельной таблице: список моделей в интерфейсе и маршрутизация обязаны
+ * приходить из одного источника, иначе чип модели обещает то, чего нельзя сделать.
+ *
+ * Первый заявивший модель её и получает — совпадений между вендорами нет,
+ * а если появятся, приоритет отдаётся порядку регистрации, а не случаю.
+ */
+function modelOwners(byId: ReadonlyMap<string, ImageProvider>): ReadonlyMap<string, ImageProvider> {
+  const owners = new Map<string, ImageProvider>()
+  for (const provider of byId.values()) {
+    for (const model of provider.models) {
+      if (!owners.has(model.id)) owners.set(model.id, provider)
+    }
+  }
+  return owners
 }
 
 /**

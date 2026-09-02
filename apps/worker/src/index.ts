@@ -50,7 +50,9 @@ export async function createWorkerRuntime(config: ApiConfig): Promise<WorkerRunt
     connection: redisConnection(config.redisUrl),
     concurrency: config.workerConcurrency,
     execution: {
-      provider: providers.active,
+      // весь реестр, а не активный провайдер: модель выбирается на ноде,
+      // и исполнять её обязан тот, кому она принадлежит
+      providers,
       storage,
       presets: new DrizzlePresetRepository(database.db),
     },
@@ -64,7 +66,13 @@ export async function createWorkerRuntime(config: ApiConfig): Promise<WorkerRunt
   })
 
   logger.info(
-    { provider: providers.active.id, concurrency: config.workerConcurrency },
+    {
+      // провайдер по умолчанию, а не единственный исполнитель: ноду с выбранной
+      // моделью исполняет тот, кому эта модель принадлежит
+      defaultProvider: providers.active.id,
+      providers: [...providers.byId.keys()],
+      concurrency: config.workerConcurrency,
+    },
     'воркер поднят',
   )
 

@@ -11,6 +11,8 @@ coverage/
 data/
 playwright-report/
 test-results/
+# снапшоты страниц от Playwright MCP: временные, пишутся в корень
+.playwright-mcp/
 
 # временные данные локальных прогонов
 .demo-data/
