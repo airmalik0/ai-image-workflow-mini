@@ -15,7 +15,7 @@ Node-based редактор AI-воркфлоу: граф собирается �
 
 ![Редактор: ветвление, две одновременные генерации и таймлайн запуска](docs/media/editor-branching.png)
 
-_Скриншот настоящий: две картинки сгенерированы OpenAI `gpt-image-2` за 18,8 с на один промпт;
+_Скриншот настоящий: две картинки сгенерированы OpenAI `gpt-image-2` по одному промпту за 18,8 с;
 таймлайн внизу показывает, что обе генерации шли внахлёст 16,7 с._
 
 ## Запуск
@@ -41,7 +41,7 @@ docker compose up
 ```
 
 Дальше: три готовых сценария из задания на пустом холсте (или своя сборка из палитры), кнопка
-**Запустить**. Порт можно занять другой — `WEB_PORT` и `API_PORT` в `.env`. API виден напрямую
+**Запустить**. Порты меняются переменными `WEB_PORT` и `API_PORT` в `.env`. API виден напрямую
 на <http://localhost:3001>, OpenAPI — на `/api/docs`.
 
 Локальная разработка без Docker (Node 22, pnpm 10): поднять Postgres и Redis, затем
@@ -82,12 +82,13 @@ POST /api/runs
   Redis: очередь job'ов + pub/sub событий
       │
       ▼
-  Worker ×N ── резолвит входы, собирает запрос из промпта и пресета,
-      │        зовёт провайдера, кладёт байты в хранилище,
-      │        публикует событие
+  Worker ×N ── собирает запрос из уже разрешённых входов и пресета,
+      │        зовёт провайдера, кладёт байты в хранилище
+      │        и возвращает исход обратной очередью
       ▼
-  Оркестратор ── пересчитывает готовность, ставит следующие ноды
-      │          или закрывает run: completed | failed | cancelled
+  Оркестратор ── публикует событие в pub/sub, пересчитывает готовность,
+      │          ставит следующие ноды или закрывает run:
+      │          completed | failed | cancelled
       ▼
   Браузер ── SSE (основной транспорт), WebSocket, polling как фолбэк
 ```
@@ -107,20 +108,20 @@ POST /api/runs
 
 ## По пунктам задания
 
-| Требование                                    | Как сделано                                                                                               | Где смотреть                                                                        |
-| --------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Canvas: add, move, connect, delete, branching | React Flow, палитра с перетаскиванием, копирование/вставка, выделение рамкой, миникарта                   | `apps/web/src/widgets/workflow-canvas`                                              |
-| Typed ports `text` / `image`                  | топология портов объявлена один раз в `NODE_SPECS`; несовместимые соединения блокируются и объясняются    | `packages/contracts/src/graph/node-specs.ts`, `packages/core/src/graph/validate.ts` |
-| Пять типов нод                                | prompt, imageInput, generateImage, editImage, result                                                      | `apps/web/src/entities/node/ui`                                                     |
-| Реальный вызов image-generation API           | OpenAI `gpt-image-2` — генерация, редактирование, несколько референсов одним запросом                     | `apps/api/src/providers/openai`, отчёт `docs/research/openai-images.md`             |
-| Ключ не попадает во фронт                     | ключи читает только API; браузер ходит в `/api/*`, провайдера выбирает сервер                             | `apps/api/src/providers/registry.ts`                                                |
-| loading / error state, timeout                | статусы job'а на карточке, код ошибки и текст провайдера, таймаут и отмена по `AbortSignal`               | `apps/web/src/entities/node/ui/node-run-status.tsx`                                 |
-| Preset как отдельная сущность                 | таблица в БД, CRUD по API, выбор в инспекторе; сборка запроса — в домене, не в компоненте                 | `packages/core/src/preset/request-builder.ts`, `apps/api/src/routes/presets.ts`     |
-| Parallel execution независимых веток          | реактивный планировщик + семафор конкурентности; таймлайн показывает окна одновременной работы            | `packages/core/src/run/engine.ts`, `apps/web/src/widgets/run-timeline`              |
-| Jobs и состояния                              | `idle → queued → running → success \| error \| skipped`                                                   | `packages/contracts/src/run.ts`                                                     |
-| `POST /runs` → `runId`, `GET /runs/:id`       | плюс SSE, WebSocket и polling как фолбэк                                                                  | `apps/api/src/routes/runs.ts`                                                       |
-| Retry упавшей ноды                            | повтор ноды и её потомков; успешные предки не пересчитываются — платить за них второй раз незачем         | `apps/api/src/routes/runs.ts`, `apps/web/src/features/retry-job`                    |
-| FSD на фронте                                 | слои `app / pages / widgets / features / entities / shared`, границы проверяет `eslint-plugin-boundaries` | `apps/web/eslint.config.js`                                                         |
+| Требование                                    | Как сделано                                                                                               | Где смотреть                                                                          |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Canvas: add, move, connect, delete, branching | React Flow, палитра с перетаскиванием, копирование/вставка, выделение рамкой, миникарта                   | `apps/web/src/widgets/workflow-canvas`                                                |
+| Typed ports `text` / `image`                  | топология портов объявлена один раз в `NODE_SPECS`; несовместимые соединения блокируются и объясняются    | `packages/contracts/src/graph/node-specs.ts`, `packages/core/src/graph/validate.ts`   |
+| Пять типов нод                                | prompt, imageInput, generateImage, editImage, result                                                      | `apps/web/src/entities/node/ui`                                                       |
+| Реальный вызов image-generation API           | OpenAI `gpt-image-2` — генерация, редактирование, несколько референсов одним запросом                     | `apps/api/src/providers/openai`, отчёт `docs/research/openai-images.md`               |
+| Ключ не попадает во фронт                     | ключи читает только API; браузер ходит в `/api/*`, провайдера выбирает сервер                             | `apps/api/src/providers/registry.ts`                                                  |
+| loading / error state, timeout                | статусы job'а на карточке, код ошибки и текст провайдера; таймаут и отмена запроса — по `AbortSignal`     | `apps/web/src/entities/node/ui/node-run-status.tsx`, `apps/api/src/providers/http.ts` |
+| Preset как отдельная сущность                 | таблица в БД, CRUD по API, выбор в инспекторе; сборка запроса — в домене, не в компоненте                 | `packages/core/src/preset/request-builder.ts`, `apps/api/src/routes/presets.ts`       |
+| Parallel execution независимых веток          | реактивный планировщик + семафор конкурентности; таймлайн показывает окна одновременной работы            | `packages/core/src/run/engine.ts`, `apps/web/src/widgets/run-timeline`                |
+| Jobs и состояния                              | `idle → queued → running → success \| error \| skipped`                                                   | `packages/contracts/src/run.ts`                                                       |
+| `POST /runs` → `runId`, `GET /runs/:id`       | плюс SSE, WebSocket и polling как фолбэк                                                                  | `apps/api/src/routes/runs.ts`                                                         |
+| Retry упавшей ноды                            | повтор ноды и её потомков; успешные предки не пересчитываются — платить за них второй раз незачем         | `apps/api/src/routes/runs.ts`, `apps/web/src/features/retry-job`                      |
+| FSD на фронте                                 | слои `app / pages / widgets / features / entities / shared`, границы проверяет `eslint-plugin-boundaries` | `apps/web/eslint.config.js`                                                           |
 
 ## Параллельность — не на словах
 
@@ -129,7 +130,7 @@ POST /api/runs
 ![Таймлайн запуска: две генерации внахлёст](docs/media/run-timeline.png)
 
 Таймлайн считает не «сколько было job'ов», а фактические окна одновременной работы: полосы
-перекрыты 16,7 с, весь прогон занял 18,8 с, последовательно те же job'ы заняли бы ≈ 35,5 с.
+перекрыты по времени на 16,7 с, весь прогон занял 18,8 с, последовательно те же job'ы заняли бы ≈ 35,5 с.
 Число одновременных запросов ограничено сверху (`MAX_CONCURRENT_JOBS`): двадцать независимых
 генераций не должны превращаться в двадцать одновременных запросов к провайдеру и в счёт на
 двадцать генераций сразу.
@@ -173,8 +174,8 @@ IMAGE_PROVIDER=fake FAKE_FAIL_NODES=editImage-1:1 docker compose up
 выбирается на уровне ноды, а не один раз на процесс.
 
 **Свой провайдер добавляется одним файлом.** Нужно реализовать порт
-[`ImageProvider`](packages/core/src/ports/image-provider.ts) (`generate`, `edit`, `models`,
-`capabilities`) — по образцу [`openai-provider.ts`](apps/api/src/providers/openai/openai-provider.ts) —
+[`ImageProvider`](packages/core/src/ports/image-provider.ts) (`id`, `models`, `defaultModel`,
+`capabilities`, `generate`, `edit`) — по образцу [`openai-provider.ts`](apps/api/src/providers/openai/openai-provider.ts) —
 и зарегистрировать его в [`registry.ts`](apps/api/src/providers/registry.ts). Ядро, контракты
 и фронт при этом не меняются: список моделей приезжает в UI из `GET /api/models`, а недостающие
 возможности (нет `negativePrompt`, меньше референсов) деградируют в `RequestBuilder` сами.
@@ -211,7 +212,7 @@ IMAGE_PROVIDER=fake FAKE_FAIL_NODES=editImage-1:1 docker compose up
 
 ```bash
 pnpm install
-pnpm test        # 444 теста: домен, API, фронт, слой данных
+pnpm test        # 446 тестов: домен, API, фронт, слой данных
 pnpm e2e         # 3 сценария Playwright против собранного стенда
 pnpm lint && pnpm typecheck && pnpm build
 ```
@@ -229,8 +230,10 @@ pnpm lint && pnpm typecheck && pnpm build
 - репозитории — против живого Postgres, и дважды: реализация на Drizzle и ин-мемори эталон
   прогоняются одним набором тестов, расхождение падает как обычный тест;
 - S3-адаптер — против живого MinIO (мок S3 проверил бы только то, что мы правильно вызвали свой мок);
-- загрузка файла — настоящим JPEG в 3 МБ через curl, с побайтовым сравнением скачанного;
-- SSE — доказано таймингами отдельных событий, что поток идёт потоком, а не одним ответом в конце;
+- загрузка файла — настоящим JPEG в 3 МБ: побайтовое сравнение скачанного в тестах и отдельно живым curl
+  против поднятого сервера;
+- SSE — тесты проверяют инкрементальную доставку, поле `id:` и докачку по `Last-Event-ID`, а на живом
+  стенде за nginx тайминги отдельных событий показали, что поток идёт потоком, а не одним ответом в конце;
 - провайдеры — живыми запросами, отчёты в `docs/research/`.
 
 ## Переменные окружения
@@ -241,7 +244,7 @@ pnpm lint && pnpm typecheck && pnpm build
 | ----------------------------------- | ---------------------------------------------------------------------- |
 | `IMAGE_PROVIDER`                    | `auto` (по умолчанию), `openai`, `gemini`, `fake`                      |
 | `OPENAI_API_KEY` / `GEMINI_API_KEY` | ключи; без них поднимается `fake`                                      |
-| `MAX_CONCURRENT_JOBS`               | потолок одновременных обращений к провайдеру на весь стенд             |
+| `MAX_CONCURRENT_JOBS`               | сколько job'ов оркестратор отдаёт в исполнение одновременно            |
 | `WORKER_CONCURRENCY`                | сколько job'ов тянет один процесс-воркер                               |
 | `FAKE_FAIL_NODES`                   | заглушка роняет названные ноды: `id` — всегда, `id:N` — первые N раз   |
 | `DEMO_DAILY_LIMIT`                  | суточный потолок обращений к платному провайдеру для публичного стенда |
@@ -256,22 +259,22 @@ pnpm lint && pnpm typecheck && pnpm build
 
 1. **Сначала разведка, потом код.** Оба провайдера прощупаны живыми запросами до реализации, отчёты
    в `docs/research/`. Например, выяснилось, что у Gemini отказ модели приходит с HTTP 200 и пустым
-   телом, а поля negative prompt нет ни у одного из двух — обе особенности изменили дизайн, а не
+   `inlineData` при заполненном `finishReason`, а поля negative prompt нет ни у одного из двух — обе особенности изменили дизайн, а не
    всплыли в проде.
 2. **TDD по шагам плана**: красный тест → реализация → зелёный → коммит.
 3. **Проверка вживую, а не «должно работать».** Всё, что заявлено выше как проверенное, действительно
    запускалось: живая генерация, curl с настоящим файлом, чистый клон и `docker compose up`,
    e2e против собранного стенда.
 4. **Журнал решений.** Каждое неочевидное решение и каждый откат версии записаны в `docs/decisions.md`
-   с причиной — двадцать с лишним записей.
+   с причиной — почти полсотни записей.
 
 ---
 
 ## In English (short)
 
 **AI Image Workflow Mini** — a node-based AI workflow editor: build a graph in the browser, run it
-on the server as a queue of jobs, watch statuses in real time. Independent branches run in parallel,
-failed nodes can be retried, runs can be cancelled.
+on the server as a queue of jobs, watch statuses in real time. Independent branches run in parallel;
+failed nodes can be retried, and runs can be cancelled.
 
 ```bash
 docker compose up   # → http://localhost:3000
@@ -288,5 +291,5 @@ nothing about the DAG, Redis pub/sub carries events back, and the browser receiv
 at all — graph validation, the scheduler and the request builder are pure, which is enforced by a test,
 so the very same validation runs in the browser and on the server.
 
-Tests: 444 unit/integration (`pnpm test`, real Postgres, Redis and MinIO) plus 3 Playwright end-to-end
+Tests: 446 unit/integration (`pnpm test`, real Postgres, Redis and MinIO) plus 3 Playwright end-to-end
 scenarios against the built Docker stack (`pnpm e2e`). CI runs all of it without any API keys.
