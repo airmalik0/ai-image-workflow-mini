@@ -20,6 +20,8 @@ interface SeedPreset {
   name: string
   mainPrompt: string
   negativePrompt: string | null
+  /** Слаг картинки из `buildReferenceImages`; в базу уезжает её id в хранилище. */
+  referenceSlug: string
   defaults: PresetDefaults | null
 }
 
@@ -27,14 +29,15 @@ interface SeedPreset {
  * Пресеты сида. Первый — тот самый «Premium 3D» из ТЗ; остальные добавлены, чтобы
  * выбор пресета в UI был осмысленным, а не витриной из одного элемента.
  *
- * Пресет сида несёт промпты — и ни модель, ни референсы. Прибитая модель вендора
- * превращала каждый пресет в мину: на стенде с ключом другого провайдера нода
- * падала с VALIDATION_FAILED, хотя пользователь модель не выбирал. А нарисованные
- * кодом референсы боевая модель не «учитывает как стиль», а копирует: вместо
- * отредактированной фотографии приезжала та самая сфера с градиентом. Механизм
- * референсов от этого никуда не делся — он собран, покрыт тестами и доступен
- * пользовательским пресетам через CRUD; картинки сида лежат готовым набором,
- * который можно прицепить к своему пресету.
+ * Пресет сида несёт промпты и ровно один референс — и не несёт модель. Прибитая
+ * модель вендора превращала каждый пресет в мину: на стенде с ключом другого
+ * провайдера нода падала с VALIDATION_FAILED, хотя пользователь модель не выбирал.
+ *
+ * Референс у каждого пресета — фон или фактура, никогда не предмет. Разница
+ * проверена на живом `gpt-image-2` и на генерации, и на редактировании: фон
+ * применяется как сцена, предмет композитится в кадр (нарисованная сфера
+ * приезжала вместо отредактированной фотографии). Подробности — в
+ * `reference-images.ts` и в docs/decisions.md.
  *
  * Идентификаторы — читаемые слаги, а не uuid: на них ссылаются ноды сохранённых
  * workflow, и пересев базы не должен ломать эти ссылки.
@@ -46,6 +49,7 @@ interface SeedPreset {
 export const SEED_PRESETS: readonly SeedPreset[] = [
   {
     id: 'preset_premium_3d',
+    referenceSlug: 'ref-premium-3d',
     name: 'Premium 3D',
     mainPrompt:
       'premium minimal 3D visual, soft studio lighting, matte pastel materials, ' +
@@ -55,6 +59,7 @@ export const SEED_PRESETS: readonly SeedPreset[] = [
   },
   {
     id: 'preset_studio_packshot',
+    referenceSlug: 'ref-studio-packshot',
     name: 'Предметная съёмка',
     mainPrompt:
       'studio packshot on seamless white cyclorama, softbox key light with large diffuser, ' +
@@ -64,6 +69,7 @@ export const SEED_PRESETS: readonly SeedPreset[] = [
   },
   {
     id: 'preset_watercolor_sketch',
+    referenceSlug: 'ref-watercolor',
     name: 'Акварельный скетч',
     mainPrompt:
       'loose watercolour illustration on cold-pressed paper, visible paper grain, ' +
@@ -73,6 +79,7 @@ export const SEED_PRESETS: readonly SeedPreset[] = [
   },
   {
     id: 'preset_neon_poster',
+    referenceSlug: 'ref-neon-poster',
     name: 'Неоновый постер',
     mainPrompt:
       'retro-futuristic neon poster, deep indigo night, magenta and cyan glow, ' +
@@ -82,6 +89,7 @@ export const SEED_PRESETS: readonly SeedPreset[] = [
   },
   {
     id: 'preset_soft_portrait',
+    referenceSlug: 'ref-soft-portrait',
     name: 'Мягкий портретный свет',
     mainPrompt:
       'portrait lit by a large soft key at 45 degrees, warm skin tones, ' +
@@ -99,9 +107,12 @@ export const SEED_PRESETS: readonly SeedPreset[] = [
 export async function seedDatabase(deps: SeedDependencies): Promise<SeedResult> {
   let filesInserted = 0
 
+  const fileIdBySlug = new Map<string, string>()
+
   for (const image of buildReferenceImages()) {
     // хранилище адресуется содержимым, поэтому повторный put — не запись, а вычисление id
     const fileId = await deps.storage.put(image.bytes, image.mimeType)
+    fileIdBySlug.set(image.slug, fileId)
 
     const inserted = await deps.db
       .insert(files)
@@ -121,7 +132,7 @@ export async function seedDatabase(deps: SeedDependencies): Promise<SeedResult> 
     name: preset.name,
     mainPrompt: preset.mainPrompt,
     negativePrompt: preset.negativePrompt,
-    referenceFileIds: [],
+    referenceFileIds: [referenceId(fileIdBySlug, preset)],
     defaults: preset.defaults,
   }))
 
@@ -132,4 +143,19 @@ export async function seedDatabase(deps: SeedDependencies): Promise<SeedResult> 
     .returning({ id: presets.id })
 
   return { presetsInserted: insertedPresets.length, filesInserted }
+}
+
+/**
+ * Опечатка в слаге роняет сид, а не оставляет пресет с пустым референсом: молча
+ * потерянный референс выглядит как рабочий стенд, на котором эта часть ТЗ
+ * не показывается.
+ */
+function referenceId(fileIdBySlug: ReadonlyMap<string, string>, preset: SeedPreset): string {
+  const fileId = fileIdBySlug.get(preset.referenceSlug)
+  if (fileId === undefined) {
+    throw new Error(
+      `Сид: у пресета «${preset.id}» референс «${preset.referenceSlug}», которого нет в наборе картинок`,
+    )
+  }
+  return fileId
 }

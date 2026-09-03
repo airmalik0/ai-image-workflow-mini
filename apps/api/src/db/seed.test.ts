@@ -76,17 +76,23 @@ describe.skipIf(unavailable !== null)('seedDatabase', () => {
   })
 
   /*
-   * Нарисованные кодом картинки боевая модель не «учитывает как стиль», а копирует:
-   * с референсом-сферой вместо отредактированной фотографии приезжает сфера.
-   * Поэтому к пресетам сида они не прицеплены, но в хранилище лежат готовым набором
-   * для пользовательских пресетов — и обязаны оставаться настоящими PNG.
+   * Референсы сида — только фоны и фактуры, ни одного предмета. Разница
+   * принципиальна и проверена на живом gpt-image-2: фон модель применяет как сцену
+   * (кружка остаётся кружкой, бетон меняется на бесшовный белый), а референс-предмет
+   * она композитит в кадр — с нарисованной сферой вместо отредактированной
+   * фотографии приезжала сфера. Поэтому у каждого пресета ровно один референс-фон.
    */
-  it('картинки сида лежат в хранилище настоящими PNG и ни к чему не прицеплены', async () => {
+  it('у каждого пресета сида есть свой референс, и он лежит в хранилище', async () => {
     const { database: testDatabase, storage } = await fresh()
     await seedDatabase({ db: testDatabase.db, storage })
 
     const presets = await new DrizzlePresetRepository(testDatabase.db).list()
-    expect(presets.flatMap((preset) => preset.references)).toEqual([])
+    expect(presets).not.toHaveLength(0)
+    for (const preset of presets) {
+      expect(preset.references, `пресет «${preset.name}» без референса`).toHaveLength(1)
+      // ссылка не должна висеть в пустоту: файл обязан быть в хранилище
+      await expect(storage.get(preset.references[0] ?? '')).resolves.toBeDefined()
+    }
 
     const rows = await testDatabase.pool.query<{ id: string }>(
       "select id from files where source = 'seed'",

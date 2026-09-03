@@ -7,6 +7,12 @@ import { deflateSync } from 'node:zlib'
  * и нельзя воспроизвести. Пятьдесят строк кодировщика дают детерминированные
  * PNG (байт в байт одинаковые при каждом сиде), а значит и стабильные
  * идентификаторы в content-addressed хранилище.
+ *
+ * **Здесь только фоны и фактуры, ни одного предмета** — и это не вкусовщина.
+ * Проверено на живом `gpt-image-2`: фоновый референс модель применяет как сцену
+ * (кружка со снимка остаётся собой, бетон меняется на бесшовный белый), а референс
+ * с предметом композитит в кадр — с нарисованной сферой вместо отредактированной
+ * фотографии приезжала сфера. Референс-предмет из набора поэтому убран.
  */
 export interface ReferenceImage {
   slug: string
@@ -21,8 +27,7 @@ type Painter = (x: number, y: number) => readonly [number, number, number]
 
 export function buildReferenceImages(): ReferenceImage[] {
   return [
-    image('ref-premium-3d-a', 'Premium 3D: мягкая сфера', premiumSphere),
-    image('ref-premium-3d-b', 'Premium 3D: градиентный фон', premiumBackdrop),
+    image('ref-premium-3d', 'Premium 3D: градиентный фон', premiumBackdrop),
     image('ref-studio-packshot', 'Предметная съёмка: белый циклорама-фон', studioPackshot),
     image('ref-watercolor', 'Акварель: пастельные пятна', watercolor),
     image('ref-neon-poster', 'Неон: сетка на тёмном', neonGrid),
@@ -49,14 +54,6 @@ function render(painter: Painter): Uint8Array {
 }
 
 // --- палитры ---------------------------------------------------------------
-
-function premiumSphere(x: number, y: number): readonly [number, number, number] {
-  const distance = Math.hypot(x - 0.5, y - 0.52)
-  const light = Math.max(0, 1 - Math.hypot(x - 0.38, y - 0.36) * 2.4)
-  if (distance > 0.32) return [244 - y * 24, 242 - y * 26, 238 - y * 28]
-  const shade = 1 - distance * 1.6 + light * 0.9
-  return [120 * shade + 60, 130 * shade + 62, 150 * shade + 70]
-}
 
 function premiumBackdrop(x: number, y: number): readonly [number, number, number] {
   const diagonal = (x + y) / 2
