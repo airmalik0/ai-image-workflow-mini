@@ -176,6 +176,15 @@ describe.skipIf(skipReason !== null)('API + worker через настоящий
         })
       }
 
+      /*
+       * Обе генерации шли одновременно, а не по очереди. Проверяется на боевом
+       * пути — API → Redis → BullMQ → воркер, — потому что ядро своим тестом
+       * доказывает только планировщик: очередь с `concurrency: 1` или
+       * потерянный семафор дали бы те же пять `success`, но последовательно,
+       * и «Parallel execution» из ТЗ осталось бы словами.
+       */
+      expect(provider.peakConcurrency).toBe(2)
+
       // поздний подписчик догоняет всё, включая события до своего подключения
       const events = await sse.waitForEvents(1)
       const seqs = events.map((event) => event.seq)
