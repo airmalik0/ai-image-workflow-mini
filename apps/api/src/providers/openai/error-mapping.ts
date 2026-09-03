@@ -94,12 +94,18 @@ function parseRetryAfterMs(header: string | null): number | null {
   return Number.isFinite(seconds) && seconds >= 0 ? Math.round(seconds * 1000) : null
 }
 
+/**
+ * Обрезается и конверт, и сырая строка: текст уезжает в `job.error.message`,
+ * оттуда в SSE и на карточку ноды, а его длину задаёт чужой сервис, не мы.
+ */
 function errorMessage(body: unknown): string {
   const message = readString(body, 'error', 'message')
-  if (message !== null) return message
-  if (typeof body === 'string') {
-    const trimmed = body.trim()
-    return trimmed.length > 300 ? `${trimmed.slice(0, 300)}…` : trimmed
-  }
+  if (message !== null) return truncate(message)
+  if (typeof body === 'string') return truncate(body)
   return 'тело ответа не разобрано'
+}
+
+function truncate(text: string): string {
+  const trimmed = text.trim()
+  return trimmed.length > 300 ? `${trimmed.slice(0, 300)}…` : trimmed
 }

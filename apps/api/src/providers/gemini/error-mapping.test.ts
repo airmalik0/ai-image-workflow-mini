@@ -246,3 +246,17 @@ describe('mapGeminiMissingImage — HTTP 200 без картинки', () => {
     expect(error.retryable).toBe(false)
   })
 })
+
+/*
+ * Текст из чужого сервиса доезжает до браузера через job.error.message и SSE.
+ * Длину ограничиваем в одном месте — на входе: карточка ноды не должна
+ * превращаться в простыню, а размер события в потоке не должен зависеть
+ * от многословности апстрима.
+ */
+it('обрезает длинный текст ошибки апстрима, а не только сырую строку тела', () => {
+  const error = mapGeminiHttpError(400, { error: { message: 'ы'.repeat(900) } })
+
+  // 300 символов апстрима плюс наш собственный префикс — но не девятьсот
+  expect(error.message.length).toBeLessThan(400)
+  expect(error.message.endsWith('…')).toBe(true)
+})

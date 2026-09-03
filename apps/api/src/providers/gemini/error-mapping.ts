@@ -130,10 +130,14 @@ function hasReason(body: unknown, reason: string): boolean {
   )
 }
 
-/** Текст ошибки: либо гугловый конверт, либо то, что вернул прокси. */
+/**
+ * Текст ошибки: либо гугловый конверт, либо то, что вернул прокси. Обрезается
+ * в обоих случаях: текст уезжает в `job.error.message`, оттуда в SSE и на карточку
+ * ноды, и его длину задаёт чужой сервис, а не мы.
+ */
 function errorMessage(body: unknown): string {
   const message = readString(body, 'error', 'message')
-  if (message !== null) return message
+  if (message !== null) return truncate(message)
   if (typeof body === 'string') return truncate(body)
   const status = readString(body, 'error', 'status')
   if (status !== null) return status
