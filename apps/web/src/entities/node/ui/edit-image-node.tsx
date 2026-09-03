@@ -54,7 +54,8 @@ export const EditImageNode = ({ id, data, selected }: NodeProps<EditImageFlowNod
             compact
             label="Модель"
             value={data.model}
-            empty="модели не загружены"
+            pending={controls.pending}
+            empty="модели недоступны"
             onSelect={(model) => controls.updateNodeData(id, { model })}
             options={[
               { value: null, label: 'по умолчанию' },
@@ -72,7 +73,8 @@ export const EditImageNode = ({ id, data, selected }: NodeProps<EditImageFlowNod
             compact
             label="Пресет"
             value={data.presetId}
-            empty="пресеты не загружены"
+            pending={controls.pending}
+            empty="пресеты недоступны"
             onSelect={(presetId) => controls.updateNodeData(id, { presetId })}
             options={[
               { value: null, label: 'без пресета' },

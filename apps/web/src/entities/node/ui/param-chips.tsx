@@ -19,6 +19,12 @@ export interface ParamChipsProps {
   onSelect: (value: string | null) => void
   /** Текст вместо чипов, когда выбирать не из чего. */
   empty?: string | undefined
+  /**
+   * Справочник ещё едет с сервера. Отдельный признак, а не текст в `empty`:
+   * список никогда не бывает пустым — первым всегда стоит «по умолчанию»,
+   * поэтому сообщение «нет вариантов» состояние загрузки выразить не может.
+   */
+  pending?: boolean | undefined
   /** Внутри карточки ноды: мельче, подпись — микрокеглем. */
   compact?: boolean | undefined
   className?: string | undefined
@@ -38,6 +44,7 @@ export const ParamChips = ({
   value,
   onSelect,
   empty,
+  pending = false,
   compact = false,
   className,
 }: ParamChipsProps) => (
@@ -62,5 +69,6 @@ export const ParamChips = ({
         ))}
       </span>
     )}
+    {pending && options.length > 0 && <span className={styles.pending}>загружаем…</span>}
   </div>
 )

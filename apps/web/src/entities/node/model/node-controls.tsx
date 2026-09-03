@@ -11,6 +11,8 @@ export interface NodePresetOption {
 export interface NodeControls {
   models: readonly ModelDescriptor[]
   presets: readonly NodePresetOption[]
+  /** Справочники ещё едут: чип «по умолчанию» уже есть, остальные подтянутся. */
+  pending: boolean
   updateNodeData: (nodeId: string, patch: Record<string, unknown>) => void
 }
 

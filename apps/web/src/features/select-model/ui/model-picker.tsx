@@ -46,7 +46,8 @@ export const ModelPicker = ({ label, value, onChange, requires }: ModelPickerPro
         value={value}
         options={options}
         onSelect={onChange}
-        empty={isLoading ? 'загружаем список моделей…' : 'список моделей недоступен'}
+        pending={isLoading}
+        empty="список моделей недоступен"
       />
 
       {error !== null && (

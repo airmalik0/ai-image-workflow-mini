@@ -53,11 +53,11 @@ export const WorkflowCanvas = () => {
 
   // Карточки нод — презентационные: списки моделей и пресетов и правку параметров
   // им подаёт виджет, потому что `entities` не может зависеть от слоёв выше.
-  const { models, error: modelsError } = useModels()
-  const { presets, error: presetsError } = usePresets()
+  const { models, error: modelsError, isLoading: modelsLoading } = useModels()
+  const { presets, error: presetsError, isLoading: presetsLoading } = usePresets()
   const nodeControls = useMemo(
-    () => ({ models, presets, updateNodeData }),
-    [models, presets, updateNodeData],
+    () => ({ models, presets, pending: modelsLoading || presetsLoading, updateNodeData }),
+    [models, presets, modelsLoading, presetsLoading, updateNodeData],
   )
   // Справочники грузятся одним и тем же API: упал он — упали оба, показываем первую причину.
   const apiError = modelsError ?? presetsError

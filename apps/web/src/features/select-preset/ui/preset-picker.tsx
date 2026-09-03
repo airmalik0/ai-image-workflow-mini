@@ -23,7 +23,8 @@ export const PresetPicker = ({ label, value, onChange }: PresetPickerProps) => {
         label={label}
         value={value}
         onSelect={onChange}
-        empty={isLoading ? 'загружаем пресеты…' : 'пресеты недоступны'}
+        pending={isLoading}
+        empty="пресеты недоступны"
         options={[
           { value: null, label: 'без пресета' },
           ...presets.map((preset) => ({ value: preset.id, label: preset.name })),
